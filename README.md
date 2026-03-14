@@ -138,6 +138,10 @@ After pushing the repository to GitHub and enabling Pages, the generated site ex
 - `/demo/learning_curve.svg` exported learning curve
 - `/demo/benchmark_summary.json` benchmark and efficiency snapshot
 
+- https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/
+- https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/demo/neural_network_3d.html
+- https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/demo/benchmark_summary.json
+
 Generated Outputs
 
 - `artifacts/learning_curve.csv`
