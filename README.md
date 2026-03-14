@@ -2,12 +2,16 @@
 
 `Neuro Motor CPP` is a C++20 reinforcement learning project that combines:
 
-- `LibTorch` for neural policy/value networks
+- `LibTorch` for neural policy and value networks
 - `PPO` for on-policy optimization
 - `MuJoCo` for continuous-control simulation
 - `HTML` and `JSON` exports for interactive neural visualization
 
-The current repository provides a formal PPO baseline in C++, supports a MuJoCo cart-pole environment, exports learning metrics, and generates a browser-based 3D viewer that renders the trained policy network and its live activations.
+The repository provides a formal PPO baseline in C++, supports a MuJoCo cart-pole environment, exports learning metrics, and generates a browser-based 3D viewer that renders the trained policy network and its live activations.
+
+Live demo: `https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/`
+
+Direct 3D viewer: `https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/demo/neural_network_3d.html`
 
 ## Highlights
 
@@ -26,7 +30,7 @@ The current repository provides a formal PPO baseline in C++, supports a MuJoCo 
 - `src/train/` rollout collection, GAE, and PPO updates
 - `src/utils/` logging and export utilities
 - `assets/mujoco/` project MuJoCo XML assets
-- `tools/` local scripts for plotting, viewing, and site publishing
+- `tools/` local scripts for plotting, viewing, setup, and publishing
 - `docs/` static web site for GitHub Pages
 - `notebooks/` analysis notebooks
 
@@ -104,6 +108,12 @@ Open the MuJoCo viewer for the project cart-pole:
 ```bash
 ./tools/view_mujoco.sh
 ```
+
+Public links:
+
+- Project site: `https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/`
+- 3D neural viewer: `https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/demo/neural_network_3d.html`
+- Learning curve: `https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/demo/learning_curve.svg`
 
 ## Web Publishing
 
