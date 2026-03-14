@@ -1,4 +1,4 @@
-# Neuro Motor CPP
+Neuro Motor CPP
 
 `Neuro Motor CPP` is a C++20 reinforcement learning project that combines:
 
@@ -9,7 +9,7 @@
 
 The current repository provides a formal PPO baseline in C++, supports a MuJoCo cart-pole environment, exports learning metrics, and generates a browser-based 3D viewer that renders the trained policy network and its live activations.
 
-## Highlights
+Highlights
 
 - PPO implementation in modern C++ with `LibTorch`
 - Optional MuJoCo integration through a clean `Environment` interface
@@ -18,7 +18,7 @@ The current repository provides a formal PPO baseline in C++, supports a MuJoCo 
 - Standalone 3D HTML viewer for policy structure and activations
 - Static web publishing path through `docs/` for GitHub Pages
 
-## Repository Layout
+Repository Layout
 
 - `src/app/` application entrypoints and orchestration
 - `src/env/` environment interface and implementations
@@ -30,7 +30,7 @@ The current repository provides a formal PPO baseline in C++, supports a MuJoCo 
 - `docs/` static web site for GitHub Pages
 - `notebooks/` analysis notebooks
 
-## Requirements
+Requirements
 
 - GCC 13+
 - CMake 3.24+
@@ -38,7 +38,7 @@ The current repository provides a formal PPO baseline in C++, supports a MuJoCo 
 - Eigen
 - MuJoCo 3.2.6 or newer for MuJoCo environments
 
-## Quick Start
+Quick Start
 
 This repository does not need to commit LibTorch binaries. If `lib/libtorch/` is missing, install the CPU package locally with:
 
@@ -105,7 +105,7 @@ Open the MuJoCo viewer for the project cart-pole:
 ./tools/view_mujoco.sh
 ```
 
-## Web Publishing
+Web Publishing
 
 This repository is prepared for static deployment through GitHub Pages.
 
