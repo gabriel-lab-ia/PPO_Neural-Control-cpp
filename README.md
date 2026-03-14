@@ -7,7 +7,7 @@ Neuro Motor CPP
 - `MuJoCo` for continuous-control simulation
 - `HTML` and `JSON` exports for interactive neural visualization
 
-The repository provides a formal PPO baseline in C++, supports a MuJoCo cart-pole environment, exports learning metrics, and generates a browser-based 3D viewer that renders the trained policy network and its live activations.
+The repository provides a formal PPO baseline in C++, supports a MuJoCo cart-pole environment, exports learning metrics and benchmarks, and generates a browser-based 3D viewer that renders the trained policy network and its live activations.
 
 Live demo: `https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/`
 
@@ -17,9 +17,12 @@ Highlights
 
 - PPO implementation in modern C++ with `LibTorch`
 - Optional MuJoCo integration through a clean `Environment` interface
+- Critic stabilization with value clipping and robust value loss
+- Low-latency lightweight policy with benchmark export
 - CSV metrics and SVG learning curves
 - Live rollout capture from the trained policy
 - Standalone 3D HTML viewer for policy structure and activations
+- Touch-friendly mobile interaction in the public 3D viewer
 - Static web publishing path through `docs/` for GitHub Pages
 
 Repository Layout
@@ -74,7 +77,7 @@ Generate the learning-curve SVG:
 python3 tools/plot_learning_curve.py artifacts/learning_curve.csv artifacts/learning_curve.svg
 ```
 
- MuJoCo Training
+MuJoCo Training
 
 Build with MuJoCo support:
 
@@ -95,7 +98,7 @@ Run a live policy rollout after training:
 NMC_ENV=mujoco_cartpole NMC_LIVE_POLICY=1 NMC_LIVE_STEPS=64 ./build/motor
 ```
 
-## Visualization
+Visualization
 
 Open the generated 3D network viewer:
 
@@ -114,8 +117,9 @@ Public links:
 - Project site: `https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/`
 - 3D neural viewer: `https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/demo/neural_network_3d.html`
 - Learning curve: `https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/demo/learning_curve.svg`
+- Benchmark summary: `https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/demo/benchmark_summary.json`
 
-## Web Publishing
+Web Publishing
 
 This repository is prepared for static deployment through GitHub Pages.
 
@@ -132,20 +136,18 @@ After pushing the repository to GitHub and enabling Pages, the generated site ex
 - `/` landing page
 - `/demo/neural_network_3d.html` direct 3D neural viewer
 - `/demo/learning_curve.svg` exported learning curve
+- `/demo/benchmark_summary.json` benchmark and efficiency snapshot
 
-- https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/
-- https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/demo/neural_network_3d.html
-
-
-## Generated Outputs
+Generated Outputs
 
 - `artifacts/learning_curve.csv`
 - `artifacts/learning_curve.svg`
 - `artifacts/live_rollout.csv`
+- `artifacts/benchmark_summary.json`
 - `artifacts/neural_network_3d.html`
 - `artifacts/neural_network_3d.json`
 
-## Project Status
+Project Status
 
 This is a serious research-engineering foundation, not a general-purpose RL framework yet. The current codebase is strongest as:
 
@@ -153,12 +155,12 @@ This is a serious research-engineering foundation, not a general-purpose RL fram
 - a MuJoCo-ready training baseline
 - a neural-visualization demo for policy inspection
 
-## Development Notes
+Development Notes
 
 - The default CI build targets the non-MuJoCo baseline so public builds stay lightweight.
 - MuJoCo support is optional and activated through `NMC_ENABLE_MUJOCO`.
 - The static site is generated from local artifacts; `docs/` is the publishable output.
 
-## License
+License
 
 This project is distributed under the MIT License. See [LICENSE](LICENSE).

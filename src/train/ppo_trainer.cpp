@@ -1,6 +1,7 @@
 #include "train/ppo_trainer.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <iomanip>
 #include <numeric>
@@ -33,6 +34,14 @@ torch::Tensor normalize_advantages(const torch::Tensor& advantages) {
     return centered / scale;
 }
 
+float explained_variance_score(const torch::Tensor& predictions, const torch::Tensor& targets) {
+    const auto target_variance = torch::var(targets, false);
+    const auto safe_variance = target_variance.clamp_min(1.0e-6);
+    const auto residual_variance = torch::var(targets - predictions, false);
+    const auto score = 1.0f - (residual_variance / safe_variance).item<float>();
+    return std::clamp(score, -1.0f, 1.0f);
+}
+
 }  // namespace
 
 PPOTrainer::PPOTrainer(
@@ -63,6 +72,7 @@ PPOTrainer::PPOTrainer(
     episode_returns_.assign(static_cast<std::size_t>(config_.num_envs), 0.0f);
     episode_lengths_.assign(static_cast<std::size_t>(config_.num_envs), 0);
     finished_successes_.reserve(static_cast<std::size_t>(config_.num_envs * config_.total_updates));
+    parameter_count_k_ = static_cast<float>(agent_->parameter_count()) / 1000.0f;
 
     for (auto& environment : environments_) {
         current_observations_.push_back(environment->reset());
@@ -74,8 +84,21 @@ std::vector<TrainingMetrics> PPOTrainer::train() {
     metrics.reserve(static_cast<std::size_t>(config_.total_updates));
 
     for (int64_t update = 1; update <= config_.total_updates; ++update) {
+        const auto update_begin = std::chrono::steady_clock::now();
         auto batch = collect_rollout();
-        metrics.push_back(update_policy(batch, update));
+        auto metric = update_policy(batch, update);
+        const auto update_end = std::chrono::steady_clock::now();
+        const auto elapsed_ms = std::chrono::duration<float, std::milli>(update_end - update_begin).count();
+        const auto sample_count = static_cast<float>(config_.num_envs * config_.rollout_steps);
+
+        metric.update_time_ms = elapsed_ms;
+        metric.samples_per_second = sample_count / std::max(elapsed_ms / 1000.0f, 1.0e-6f);
+        if (update == 1 || update == config_.total_updates || update % 5 == 0) {
+            cached_inference_latency_ms_ = benchmark_inference_latency_ms();
+        }
+        metric.inference_latency_ms = cached_inference_latency_ms_;
+        metric.parameter_count_k = parameter_count_k_;
+        metrics.push_back(metric);
     }
 
     return metrics;
@@ -234,7 +257,7 @@ RolloutBatch PPOTrainer::collect_rollout() {
             advantages + values[static_cast<std::size_t>(step)];
     }
 
-    auto batch = RolloutBatch{
+    return {
         torch::cat(observations).detach(),
         torch::cat(actions).detach(),
         torch::cat(log_probs).detach(),
@@ -243,15 +266,18 @@ RolloutBatch PPOTrainer::collect_rollout() {
         normalize_advantages(torch::cat(advantage_steps).detach()),
         torch::cat(values).detach()
     };
-
-    return batch;
 }
 
 TrainingMetrics PPOTrainer::update_policy(const RolloutBatch& batch, int64_t update_index) {
     agent_->train();
 
     const auto sample_count = batch.observations.size(0);
-    auto permutation = torch::randperm(sample_count, torch::TensorOptions().dtype(torch::kInt64));
+    const auto return_mean = batch.returns.mean();
+    const auto return_std = batch.returns.std(false).clamp_min(1.0e-5);
+    const float progress = static_cast<float>(update_index - 1) /
+        static_cast<float>(std::max<int64_t>(1, config_.total_updates - 1));
+    const float entropy_weight = config_.entropy_weight * (1.15f - 0.35f * progress);
+    constexpr float kTargetApproxKl = 0.03f;
 
     float last_policy_loss = 0.0f;
     float last_value_loss = 0.0f;
@@ -259,9 +285,14 @@ TrainingMetrics PPOTrainer::update_policy(const RolloutBatch& batch, int64_t upd
     float last_approx_kl = 0.0f;
     float last_clip_fraction = 0.0f;
     float last_action_std = 0.0f;
+    bool stop_early = false;
 
     for (int64_t epoch = 0; epoch < config_.ppo_epochs; ++epoch) {
-        permutation = torch::randperm(sample_count, torch::TensorOptions().dtype(torch::kInt64));
+        if (stop_early) {
+            break;
+        }
+
+        auto permutation = torch::randperm(sample_count, torch::TensorOptions().dtype(torch::kInt64));
 
         for (int64_t start = 0; start < sample_count; start += config_.minibatch_size) {
             const auto stop = std::min(start + config_.minibatch_size, sample_count);
@@ -270,11 +301,13 @@ TrainingMetrics PPOTrainer::update_policy(const RolloutBatch& batch, int64_t upd
             const auto obs = batch.observations.index_select(0, indices);
             const auto actions = batch.actions.index_select(0, indices);
             const auto old_log_probs = batch.log_probs.index_select(0, indices);
+            const auto old_values = batch.values.index_select(0, indices);
             const auto returns = batch.returns.index_select(0, indices);
             const auto advantages = batch.advantages.index_select(0, indices);
 
             const auto [new_log_probs, entropy] = agent_->evaluate_actions(obs, actions);
             const auto values = agent_->values(obs);
+            const auto std = agent_->policy_std(obs);
             const auto log_ratio = new_log_probs - old_log_probs;
             const auto ratio = torch::exp(log_ratio);
             const auto clipped_ratio =
@@ -283,12 +316,34 @@ TrainingMetrics PPOTrainer::update_policy(const RolloutBatch& batch, int64_t upd
             const auto surrogate_1 = ratio * advantages;
             const auto surrogate_2 = clipped_ratio * advantages;
             const auto policy_loss = -torch::minimum(surrogate_1, surrogate_2).mean();
-            const auto value_loss = torch::mse_loss(values, returns);
+
+            const auto normalized_returns = (returns - return_mean) / return_std;
+            const auto normalized_values = (values - return_mean) / return_std;
+            const auto normalized_old_values = (old_values - return_mean) / return_std;
+            const auto clipped_values = normalized_old_values + torch::clamp(
+                normalized_values - normalized_old_values,
+                -config_.value_clip_epsilon,
+                config_.value_clip_epsilon
+            );
+            const auto unclipped_value_loss = torch::smooth_l1_loss(
+                normalized_values,
+                normalized_returns,
+                torch::Reduction::None
+            );
+            const auto clipped_value_loss = torch::smooth_l1_loss(
+                clipped_values,
+                normalized_returns,
+                torch::Reduction::None
+            );
+            const auto critic_loss = torch::maximum(unclipped_value_loss, clipped_value_loss).mean();
+
             const auto entropy_bonus = entropy.mean();
+            const auto std_floor_penalty = torch::relu(config_.target_action_std - std.mean());
             const auto total_loss =
                 policy_loss +
-                config_.value_loss_weight * value_loss -
-                config_.entropy_weight * entropy_bonus;
+                config_.value_loss_weight * critic_loss -
+                entropy_weight * entropy_bonus +
+                config_.std_floor_weight * std_floor_penalty;
 
             optimizer_->zero_grad();
             total_loss.backward();
@@ -296,7 +351,7 @@ TrainingMetrics PPOTrainer::update_policy(const RolloutBatch& batch, int64_t upd
             optimizer_->step();
 
             last_policy_loss = policy_loss.item<float>();
-            last_value_loss = value_loss.item<float>();
+            last_value_loss = critic_loss.item().toFloat();
             last_entropy = entropy_bonus.item<float>();
             last_approx_kl = ((ratio - 1.0f) - log_ratio).mean().item<float>();
             last_clip_fraction =
@@ -304,7 +359,12 @@ TrainingMetrics PPOTrainer::update_policy(const RolloutBatch& batch, int64_t upd
                     .to(torch::kFloat32)
                     .mean()
                     .item<float>();
-            last_action_std = agent_->act(obs, true).std_action.mean().item<float>();
+            last_action_std = std.mean().item<float>();
+
+            if (last_approx_kl > kTargetApproxKl * 1.5f) {
+                stop_early = true;
+                break;
+            }
         }
     }
 
@@ -328,6 +388,7 @@ TrainingMetrics PPOTrainer::update_policy(const RolloutBatch& batch, int64_t upd
         );
     }
 
+    const auto predicted_values = agent_->values(batch.observations).detach();
     const float step_reward = batch.rewards.mean().item<float>();
     const float success_rate = mean_or_zero(success_window);
 
@@ -343,12 +404,46 @@ TrainingMetrics PPOTrainer::update_policy(const RolloutBatch& batch, int64_t upd
         mean_or_zero(reward_window),
         mean_or_zero(length_window),
         success_rate,
-        last_action_std
+        last_action_std,
+        explained_variance_score(predicted_values, batch.returns),
+        0.0f,
+        0.0f,
+        0.0f,
+        parameter_count_k_
     };
 }
 
 torch::Tensor PPOTrainer::stack_observations() const {
     return torch::stack(current_observations_);
+}
+
+float PPOTrainer::benchmark_inference_latency_ms() {
+    if (current_observations_.empty()) {
+        return 0.0f;
+    }
+
+    const bool was_training = agent_->is_training();
+    agent_->eval();
+
+    torch::NoGradGuard no_grad;
+    const auto observation = current_observations_.front().unsqueeze(0).to(device_);
+
+    for (int64_t warmup = 0; warmup < 32; ++warmup) {
+        static_cast<void>(agent_->act(observation, true));
+    }
+
+    const auto begin = std::chrono::steady_clock::now();
+    for (int64_t iteration = 0; iteration < config_.benchmark_iterations; ++iteration) {
+        static_cast<void>(agent_->act(observation, true));
+    }
+    const auto end = std::chrono::steady_clock::now();
+
+    if (was_training) {
+        agent_->train();
+    }
+
+    const auto elapsed_ms = std::chrono::duration<float, std::milli>(end - begin).count();
+    return elapsed_ms / static_cast<float>(std::max<int64_t>(1, config_.benchmark_iterations));
 }
 
 }  // namespace nmc

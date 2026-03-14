@@ -38,6 +38,7 @@ private:
     RolloutBatch collect_rollout();
     TrainingMetrics update_policy(const RolloutBatch& batch, int64_t update_index);
     torch::Tensor stack_observations() const;
+    float benchmark_inference_latency_ms();
 
     TrainerConfig config_;
     std::filesystem::path artifact_dir_;
@@ -52,6 +53,8 @@ private:
     std::vector<int64_t> finished_lengths_;
     std::vector<float> finished_successes_;
     int64_t total_env_steps_ = 0;
+    float cached_inference_latency_ms_ = 0.0f;
+    float parameter_count_k_ = 0.0f;
 };
 
 }  // namespace nmc

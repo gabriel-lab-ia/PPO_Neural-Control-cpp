@@ -17,6 +17,7 @@ def main() -> int:
         "learning_curve.svg",
         "learning_curve.csv",
         "live_rollout.csv",
+        "benchmark_summary.json",
     ]
 
     missing = [name for name in files if not (artifacts / name).exists()]

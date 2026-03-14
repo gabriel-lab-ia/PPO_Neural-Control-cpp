@@ -26,6 +26,8 @@ public:
         const torch::Tensor& actions
     );
     torch::Tensor values(const torch::Tensor& observations);
+    torch::Tensor policy_std(const torch::Tensor& observations);
+    int64_t parameter_count() const;
     std::vector<std::string> visualization_layer_names() const;
     std::vector<int64_t> visualization_layer_sizes() const;
     std::vector<torch::Tensor> visualization_weights();

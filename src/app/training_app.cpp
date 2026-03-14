@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -54,11 +55,44 @@ int64_t live_step_limit() {
     }
 }
 
+void write_benchmark_summary(
+    const std::filesystem::path& path,
+    const std::string& environment_name,
+    const TrainerConfig& config,
+    const TrainingMetrics& metrics
+) {
+    std::filesystem::create_directories(path.parent_path());
+    std::ofstream stream(path, std::ios::out | std::ios::trunc);
+    if (!stream.is_open()) {
+        throw std::runtime_error("unable to open benchmark summary file: " + path.string());
+    }
+
+    stream << std::fixed << std::setprecision(6);
+    stream << "{\n";
+    stream << "  \"environment\": \"" << environment_name << "\",\n";
+    stream << "  \"hidden_dim\": " << config.hidden_dim << ",\n";
+    stream << "  \"ppo_epochs\": " << config.ppo_epochs << ",\n";
+    stream << "  \"minibatch_size\": " << config.minibatch_size << ",\n";
+    stream << "  \"policy_loss\": " << metrics.policy_loss << ",\n";
+    stream << "  \"value_loss\": " << metrics.value_loss << ",\n";
+    stream << "  \"entropy\": " << metrics.entropy << ",\n";
+    stream << "  \"action_std\": " << metrics.action_std << ",\n";
+    stream << "  \"explained_variance\": " << metrics.explained_variance << ",\n";
+    stream << "  \"avg_episode_return\": " << metrics.avg_episode_return << ",\n";
+    stream << "  \"success_rate\": " << metrics.success_rate << ",\n";
+    stream << "  \"update_time_ms\": " << metrics.update_time_ms << ",\n";
+    stream << "  \"samples_per_second\": " << metrics.samples_per_second << ",\n";
+    stream << "  \"inference_latency_ms\": " << metrics.inference_latency_ms << ",\n";
+    stream << "  \"parameter_count_k\": " << metrics.parameter_count_k << "\n";
+    stream << "}\n";
+}
+
 }  // namespace
 
 int run_training_app() {
     const auto artifact_dir = std::filesystem::path("artifacts");
     const auto metrics_path = artifact_dir / "learning_curve.csv";
+    const auto benchmark_path = artifact_dir / "benchmark_summary.json";
 
     const TrainerConfig config{};
     const auto environment_selection = load_environment_selection();
@@ -91,21 +125,31 @@ int run_training_app() {
             << " | steps=" << std::setw(6) << metric.env_steps
             << " | policy=" << std::setw(8) << std::fixed << std::setprecision(4) << metric.policy_loss
             << " | value=" << std::setw(8) << metric.value_loss
+            << " | entropy=" << std::setw(7) << metric.entropy
+            << " | std=" << std::setw(7) << metric.action_std
             << " | reward=" << std::setw(8) << metric.avg_episode_return
-            << " | success=" << std::setw(7) << metric.success_rate
-            << " | len=" << std::setw(6) << metric.avg_episode_length
+            << " | fps=" << std::setw(8) << metric.samples_per_second
+            << " | latency_ms=" << std::setw(7) << metric.inference_latency_ms
             << '\n';
     }
 
     if (!metrics.empty()) {
         const auto& final = metrics.back();
+        write_benchmark_summary(benchmark_path, environment_name, config, final);
+
         std::cout << "\nSummary\n";
         std::cout << "-------\n";
         std::cout << "Final avg episode return : " << final.avg_episode_return << '\n';
         std::cout << "Final success rate       : " << final.success_rate << '\n';
-        std::cout << "Final avg episode length : " << final.avg_episode_length << '\n';
+        std::cout << "Final value loss         : " << final.value_loss << '\n';
         std::cout << "Final policy entropy     : " << final.entropy << '\n';
+        std::cout << "Final action std         : " << final.action_std << '\n';
+        std::cout << "Explained variance       : " << final.explained_variance << '\n';
+        std::cout << "Inference latency (ms)   : " << final.inference_latency_ms << '\n';
+        std::cout << "Samples per second       : " << final.samples_per_second << '\n';
+        std::cout << "Parameter count (K)      : " << final.parameter_count_k << '\n';
         std::cout << "Metrics exported to      : " << metrics_path << '\n';
+        std::cout << "Benchmark summary        : " << benchmark_path << '\n';
     }
 
     {

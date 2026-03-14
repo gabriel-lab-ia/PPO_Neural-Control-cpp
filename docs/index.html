@@ -108,10 +108,11 @@
         <div class="meta">C++ • PPO • RL • MuJoCo • HTML</div>
         <h1>Neuro Motor CPP</h1>
         <p>A formal C++ reinforcement learning project centered on PPO, MuJoCo simulation, metric exports, and a browser-based 3D neural-network viewer.</p>
-        <p>This site is the static publishing surface for the repository demo. It provides direct access to the trained-policy visualization and exported artifacts.</p>
+        <p>This site is the static publishing surface for the repository demo. It provides direct access to the trained-policy visualization, benchmark summary, and exported artifacts.</p>
         <div class="links">
           <a class="button primary" href="./demo/neural_network_3d.html">Open 3D Neural Viewer</a>
           <a class="button" href="./demo/learning_curve.svg">Open Learning Curve</a>
+          <a class="button" href="./demo/benchmark_summary.json">Download Benchmark JSON</a>
           <a class="button" href="./demo/live_rollout.csv">Download Live Rollout CSV</a>
           <a class="button" href="./demo/neural_network_3d.json">Download Viewer JSON</a>
           <a class="button" href="https://github.com/gabriel-lab-ia/PPO_Neural-Control-cpp">Open GitHub Repository</a>
@@ -120,14 +121,14 @@
       <div class="card">
         <h2>Project Focus</h2>
         <p>PPO is implemented in modern C++ using LibTorch, with a clean environment abstraction that supports a default baseline and optional MuJoCo backends.</p>
-        <p>The viewer exposes policy structure, connection weights, and sampled live activations in a standalone HTML artifact suitable for static hosting.</p>
+        <p>The viewer exposes policy structure, connection weights, and sampled live activations in a standalone HTML artifact suitable for static hosting, now with touch-friendly controls for mobile devices.</p>
         <p class="signature">feito por Gabriel Arantes</p>
       </div>
     </section>
     <section class="grid">
       <div class="card">
         <h3>Training Core</h3>
-        <p>Rollout collection, generalized advantage estimation, and PPO updates are implemented in C++ and exported through reproducible metric logs.</p>
+        <p>Rollout collection, generalized advantage estimation, PPO clipping, entropy preservation, and critic stabilization are implemented in C++ and exported through reproducible metric logs.</p>
       </div>
       <div class="card">
         <h3>MuJoCo Integration</h3>
@@ -135,7 +136,7 @@
       </div>
       <div class="card">
         <h3>Web Visualization</h3>
-        <p>The demo artifacts are static and browser-friendly, which makes GitHub Pages a practical zero-backend publishing path.</p>
+        <p>The demo artifacts are static and browser-friendly, with direct desktop and mobile interaction, which makes GitHub Pages a practical zero-backend publishing path.</p>
       </div>
     </section>
   </main>

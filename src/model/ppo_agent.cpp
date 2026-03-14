@@ -5,9 +5,15 @@
 namespace nmc {
 namespace {
 
-constexpr float kMinLogStd = -2.5f;
-constexpr float kMaxLogStd = 0.5f;
+constexpr float kMinLogStd = -1.2f;
+constexpr float kMaxLogStd = 0.35f;
 constexpr double kLogTwoPi = 1.8378770664093453;
+
+void init_linear(const torch::nn::Linear& layer, double gain) {
+    torch::NoGradGuard no_grad;
+    torch::nn::init::orthogonal_(layer->weight, gain);
+    torch::nn::init::constant_(layer->bias, 0.0);
+}
 
 torch::Tensor gaussian_log_prob(
     const torch::Tensor& actions,
@@ -37,16 +43,23 @@ PPOAgentImpl::PPOAgentImpl(int64_t observation_dim, int64_t action_dim, int64_t 
     encoder_hidden_ = torch::nn::Linear(hidden_dim, hidden_dim);
     actor_mean_ = torch::nn::Linear(hidden_dim, action_dim);
     critic_ = torch::nn::Linear(hidden_dim, 1);
-    log_std_ = register_parameter("log_std", torch::full({action_dim}, -0.35f));
+    log_std_ = register_parameter("log_std", torch::full({action_dim}, -0.10f));
 
     register_module("encoder_input", encoder_input_);
     register_module("encoder_hidden", encoder_hidden_);
     register_module("actor_mean", actor_mean_);
     register_module("critic", critic_);
+
+    init_linear(encoder_input_, std::sqrt(2.0));
+    init_linear(encoder_hidden_, std::sqrt(2.0));
+    init_linear(actor_mean_, 0.01);
+    init_linear(critic_, 1.0);
 }
 
 PolicyOutput PPOAgentImpl::act(const torch::Tensor& observations, bool deterministic) {
-    const auto [mean, std] = policy_distribution(observations);
+    const auto latent = encode(observations);
+    const auto mean = torch::tanh(actor_mean_->forward(latent));
+    const auto std = torch::exp(torch::clamp(log_std_, kMinLogStd, kMaxLogStd)).expand_as(mean);
     torch::Tensor action = mean;
 
     if (!deterministic) {
@@ -55,7 +68,7 @@ PolicyOutput PPOAgentImpl::act(const torch::Tensor& observations, bool determini
 
     action = torch::clamp(action, -1.0f, 1.0f);
     const auto log_prob = gaussian_log_prob(action, mean, std);
-    const auto value = critic_->forward(encode(observations)).squeeze(-1);
+    const auto value = critic_->forward(latent).squeeze(-1);
 
     return {action, log_prob, value, mean, std};
 }
@@ -74,6 +87,18 @@ torch::Tensor PPOAgentImpl::values(const torch::Tensor& observations) {
     return critic_->forward(encode(observations)).squeeze(-1);
 }
 
+torch::Tensor PPOAgentImpl::policy_std(const torch::Tensor& observations) {
+    return policy_distribution(observations).second;
+}
+
+int64_t PPOAgentImpl::parameter_count() const {
+    int64_t total = 0;
+    for (const auto& parameter : parameters()) {
+        total += parameter.numel();
+    }
+    return total;
+}
+
 std::pair<torch::Tensor, torch::Tensor> PPOAgentImpl::policy_distribution(
     const torch::Tensor& observations
 ) {
@@ -84,8 +109,9 @@ std::pair<torch::Tensor, torch::Tensor> PPOAgentImpl::policy_distribution(
 }
 
 torch::Tensor PPOAgentImpl::encode(const torch::Tensor& observations) {
-    const auto hidden_1 = torch::tanh(encoder_input_->forward(observations));
-    return torch::tanh(encoder_hidden_->forward(hidden_1));
+    const auto hidden_1 = torch::silu(encoder_input_->forward(observations));
+    const auto hidden_2 = torch::silu(encoder_hidden_->forward(hidden_1) + hidden_1);
+    return hidden_2;
 }
 
 std::vector<std::string> PPOAgentImpl::visualization_layer_names() const {
@@ -124,8 +150,8 @@ std::vector<torch::Tensor> PPOAgentImpl::visualization_activations(const torch::
     }
 
     const auto input = batch.squeeze(0).detach().to(torch::kCPU).clone();
-    const auto hidden_1 = torch::tanh(encoder_input_->forward(batch)).squeeze(0);
-    const auto hidden_2 = torch::tanh(encoder_hidden_->forward(hidden_1.unsqueeze(0))).squeeze(0);
+    const auto hidden_1 = torch::silu(encoder_input_->forward(batch)).squeeze(0);
+    const auto hidden_2 = torch::silu(encoder_hidden_->forward(hidden_1.unsqueeze(0)) + hidden_1.unsqueeze(0)).squeeze(0);
     const auto policy = torch::tanh(actor_mean_->forward(hidden_2.unsqueeze(0))).squeeze(0);
     const auto value = critic_->forward(hidden_2.unsqueeze(0)).squeeze(0);
 

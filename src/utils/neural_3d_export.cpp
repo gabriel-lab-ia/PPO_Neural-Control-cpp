@@ -135,6 +135,7 @@ std::string build_viewer_html(const std::string& json_payload) {
     body {
       margin: 0;
       overflow: hidden;
+      overscroll-behavior: none;
       font-family: "DejaVu Sans", system-ui, sans-serif;
       background:
         radial-gradient(circle at top, rgba(46, 112, 173, 0.22), transparent 32%),
@@ -142,12 +143,17 @@ std::string build_viewer_html(const std::string& json_payload) {
         linear-gradient(180deg, #040912 0%, #07111a 100%);
       color: var(--text);
     }
-    canvas { display: block; width: 100vw; height: 100vh; }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      touch-action: none;
+    }
     .hud {
       position: fixed;
       top: 18px;
       left: 18px;
-      width: 360px;
+      width: min(360px, calc(100vw - 36px));
       padding: 18px 18px 14px;
       background: var(--panel);
       border: 1px solid rgba(146, 189, 226, 0.18);
@@ -186,6 +192,8 @@ std::string build_viewer_html(const std::string& json_payload) {
     .legend {
       display: flex;
       justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
       margin-top: 10px;
       color: var(--muted);
       font-size: 12px;
@@ -200,6 +208,21 @@ std::string build_viewer_html(const std::string& json_payload) {
       text-transform: uppercase;
       pointer-events: none;
     }
+    @media (max-width: 720px) {
+      .hud {
+        top: 12px;
+        left: 12px;
+        width: calc(100vw - 24px);
+        padding: 16px;
+      }
+      .stats {
+        grid-template-columns: 1fr 1fr;
+      }
+      .signature {
+        right: 12px;
+        bottom: 10px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -207,6 +230,7 @@ std::string build_viewer_html(const std::string& json_payload) {
   <div class="hud">
     <h1>3D Neural Environment</h1>
     <p>Spatial rendering of the trained PPO network with animated neurons, synapses, and activations sampled from a live rollout.</p>
+    <p>Desktop: drag with the mouse. Mobile: drag with one finger to orbit the network.</p>
     <div class="controls">
       <button id="toggle">Pause</button>
       <button id="stepBack">Prev</button>
@@ -239,16 +263,30 @@ std::string build_viewer_html(const std::string& json_payload) {
     const actionValue = document.getElementById('actionValue');
     const toggleButton = document.getElementById('toggle');
 
-    const state = { frame: 0, playing: true, yaw: 0.7, pitch: -0.25, mouseDown: false, lastX: 0, lastY: 0 };
+    const state = {
+      frame: 0,
+      playing: true,
+      yaw: 0.7,
+      pitch: -0.25,
+      dragging: false,
+      pointerId: null,
+      lastX: 0,
+      lastY: 0,
+      lastAdvance: 0,
+    };
+
     const layerSpacing = 280;
     const nodes = [];
+    const nodeLookup = new Map();
+    const sparseEdges = [];
 
     function resize() {
-      canvas.width = window.innerWidth * window.devicePixelRatio;
-      canvas.height = window.innerHeight * window.devicePixelRatio;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
       canvas.style.width = window.innerWidth + 'px';
       canvas.style.height = window.innerHeight + 'px';
-      ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
     function clamp(value, low, high) {
@@ -278,7 +316,9 @@ std::string build_viewer_html(const std::string& json_payload) {
           const column = index % columns;
           const y = (row - (rows - 1) / 2) * 26;
           const z = (column - (columns - 1) / 2) * 26;
-          nodes.push({ layerIndex, nodeIndex: index, label: layer.name, position: { x, y, z } });
+          const node = { layerIndex, nodeIndex: index, label: layer.name, position: { x, y, z } };
+          nodeLookup.set(`${layerIndex}:${index}`, nodes.length);
+          nodes.push(node);
         }
       });
     }
@@ -306,7 +346,6 @@ std::string build_viewer_html(const std::string& json_payload) {
     }
 
     function buildSparseEdges() {
-      const sparse = [];
       snapshot.connections.forEach((connection) => {
         const perTarget = connection.rows > 64 ? 8 : 12;
         for (let target = 0; target < connection.rows; target++) {
@@ -316,19 +355,17 @@ std::string build_viewer_html(const std::string& json_payload) {
             local.push({ source, target, weight });
           }
           local.sort((a, b) => Math.abs(b.weight) - Math.abs(a.weight));
-          sparse.push(...local.slice(0, perTarget).map((edge) => ({
-            fromLayer: connection.from_layer,
-            toLayer: connection.to_layer,
-            source: edge.source,
-            target: edge.target,
-            weight: edge.weight,
-          })));
+          local.slice(0, perTarget).forEach((edge) => {
+            const fromIndex = nodeLookup.get(`${connection.from_layer}:${edge.source}`);
+            const toIndex = nodeLookup.get(`${connection.to_layer}:${edge.target}`);
+            if (fromIndex === undefined || toIndex === undefined) {
+              return;
+            }
+            sparseEdges.push({ fromIndex, toIndex, weight: edge.weight });
+          });
         }
       });
-      return sparse;
     }
-
-    const sparseEdges = buildSparseEdges();
 
     function draw(frame) {
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
@@ -341,14 +378,14 @@ std::string build_viewer_html(const std::string& json_payload) {
       });
 
       sparseEdges.forEach((edge) => {
-        const from = projectedNodes.find((node) => node.layerIndex === edge.fromLayer && node.nodeIndex === edge.source);
-        const to = projectedNodes.find((node) => node.layerIndex === edge.toLayer && node.nodeIndex === edge.target);
+        const from = projectedNodes[edge.fromIndex];
+        const to = projectedNodes[edge.toIndex];
         if (!from || !to) {
           return;
         }
 
-        const activationA = frame.activations[edge.fromLayer][edge.source] || 0;
-        const activationB = frame.activations[edge.toLayer][edge.target] || 0;
+        const activationA = frame.activations[from.layerIndex][from.nodeIndex] || 0;
+        const activationB = frame.activations[to.layerIndex][to.nodeIndex] || 0;
         const intensity = Math.min(1, Math.abs(activationA) * 0.7 + Math.abs(activationB) * 0.7);
         ctx.strokeStyle = weightColor(edge.weight);
         ctx.lineWidth = 0.5 + intensity * 1.6;
@@ -390,17 +427,56 @@ std::string build_viewer_html(const std::string& json_payload) {
       scrub.value = String(state.frame);
     }
 
-    function render() {
-      if (state.playing && snapshot.frames.length > 0) {
+    function render(timestamp) {
+      if (state.playing && snapshot.frames.length > 0 && timestamp - state.lastAdvance >= 110) {
         state.frame = (state.frame + 1) % snapshot.frames.length;
+        state.lastAdvance = timestamp;
       }
       const frame = snapshot.frames[state.frame];
       if (frame) {
         draw(frame);
         syncHud(frame);
       }
-      state.yaw += state.mouseDown ? 0.0 : 0.0028;
+      state.yaw += state.dragging ? 0.0 : 0.0018;
       requestAnimationFrame(render);
+    }
+
+    function beginPointerDrag(event) {
+      event.preventDefault();
+      state.dragging = true;
+      state.pointerId = event.pointerId;
+      state.lastX = event.clientX;
+      state.lastY = event.clientY;
+      if (canvas.setPointerCapture) {
+        canvas.setPointerCapture(event.pointerId);
+      }
+    }
+
+    function movePointerDrag(event) {
+      if (!state.dragging || (state.pointerId !== null && event.pointerId !== state.pointerId)) {
+        return;
+      }
+      event.preventDefault();
+      const dx = event.clientX - state.lastX;
+      const dy = event.clientY - state.lastY;
+      state.yaw += dx * 0.005;
+      state.pitch = clamp(state.pitch + dy * 0.004, -1.1, 1.1);
+      state.lastX = event.clientX;
+      state.lastY = event.clientY;
+    }
+
+    function endPointerDrag(event) {
+      if (state.pointerId !== null && event.pointerId !== state.pointerId) {
+        return;
+      }
+      state.dragging = false;
+      state.pointerId = null;
+      if (canvas.releasePointerCapture && event.pointerId !== undefined) {
+        try {
+          canvas.releasePointerCapture(event.pointerId);
+        } catch (error) {
+        }
+      }
     }
 
     toggleButton.addEventListener('click', () => {
@@ -408,6 +484,9 @@ std::string build_viewer_html(const std::string& json_payload) {
       toggleButton.textContent = state.playing ? 'Pause' : 'Play';
     });
     document.getElementById('stepBack').addEventListener('click', () => {
+      if (snapshot.frames.length === 0) {
+        return;
+      }
       state.playing = false;
       toggleButton.textContent = 'Play';
       state.frame = (state.frame - 1 + snapshot.frames.length) % snapshot.frames.length;
@@ -415,6 +494,9 @@ std::string build_viewer_html(const std::string& json_payload) {
       syncHud(snapshot.frames[state.frame]);
     });
     document.getElementById('stepForward').addEventListener('click', () => {
+      if (snapshot.frames.length === 0) {
+        return;
+      }
       state.playing = false;
       toggleButton.textContent = 'Play';
       state.frame = (state.frame + 1) % snapshot.frames.length;
@@ -422,6 +504,9 @@ std::string build_viewer_html(const std::string& json_payload) {
       syncHud(snapshot.frames[state.frame]);
     });
     scrub.addEventListener('input', (event) => {
+      if (snapshot.frames.length === 0) {
+        return;
+      }
       state.playing = false;
       toggleButton.textContent = 'Play';
       state.frame = Number(event.target.value);
@@ -429,24 +514,15 @@ std::string build_viewer_html(const std::string& json_payload) {
       syncHud(snapshot.frames[state.frame]);
     });
 
-    canvas.addEventListener('mousedown', (event) => {
-      state.mouseDown = true;
-      state.lastX = event.clientX;
-      state.lastY = event.clientY;
-    });
-    window.addEventListener('mouseup', () => { state.mouseDown = false; });
-    window.addEventListener('mousemove', (event) => {
-      if (!state.mouseDown) return;
-      const dx = event.clientX - state.lastX;
-      const dy = event.clientY - state.lastY;
-      state.yaw += dx * 0.005;
-      state.pitch = clamp(state.pitch + dy * 0.004, -1.1, 1.1);
-      state.lastX = event.clientX;
-      state.lastY = event.clientY;
-    });
+    canvas.addEventListener('pointerdown', beginPointerDrag);
+    canvas.addEventListener('pointermove', movePointerDrag);
+    canvas.addEventListener('pointerup', endPointerDrag);
+    canvas.addEventListener('pointercancel', endPointerDrag);
+    canvas.addEventListener('pointerleave', endPointerDrag);
 
     resize();
     buildNodes();
+    buildSparseEdges();
     scrub.max = String(Math.max(snapshot.frames.length - 1, 0));
     envValue.textContent = snapshot.meta.environment;
     window.addEventListener('resize', resize);

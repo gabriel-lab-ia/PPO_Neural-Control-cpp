@@ -1,0 +1,17 @@
+{
+  "environment": "MuJoCoCartPoleEnv",
+  "hidden_dim": 96,
+  "ppo_epochs": 5,
+  "minibatch_size": 192,
+  "policy_loss": -0.069096,
+  "value_loss": 0.093677,
+  "entropy": 1.426740,
+  "action_std": 1.007832,
+  "explained_variance": 0.790337,
+  "avg_episode_return": 290.707703,
+  "success_rate": 1.000000,
+  "update_time_ms": 300.689697,
+  "samples_per_second": 6811.008301,
+  "inference_latency_ms": 0.071150,
+  "parameter_count_k": 9.987000
+}

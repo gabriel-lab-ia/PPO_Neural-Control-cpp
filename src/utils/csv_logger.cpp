@@ -12,8 +12,9 @@ CsvLogger::CsvLogger(const std::filesystem::path& path) {
         throw std::runtime_error("unable to open metrics file: " + path.string());
     }
 
-    stream_ << "update,env_steps,policy_loss,value_loss,entropy,approx_kl,clip_fraction,"
-               "avg_step_reward,avg_episode_return,avg_episode_length,success_rate,action_std\n";
+    stream_ << "update,env_steps,policy_loss,value_loss,entropy,approx_kl,clip_fraction," \
+              "avg_step_reward,avg_episode_return,avg_episode_length,success_rate,action_std," \
+              "explained_variance,update_time_ms,samples_per_second,inference_latency_ms,parameter_count_k\n";
     stream_ << std::fixed << std::setprecision(6);
 }
 
@@ -36,7 +37,12 @@ void CsvLogger::log(const TrainingMetrics& metrics) {
         << metrics.avg_episode_return << ','
         << metrics.avg_episode_length << ','
         << metrics.success_rate << ','
-        << metrics.action_std << '\n';
+        << metrics.action_std << ','
+        << metrics.explained_variance << ','
+        << metrics.update_time_ms << ','
+        << metrics.samples_per_second << ','
+        << metrics.inference_latency_ms << ','
+        << metrics.parameter_count_k << '\n';
 }
 
 }  // namespace nmc

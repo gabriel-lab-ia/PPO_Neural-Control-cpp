@@ -50,7 +50,7 @@ def scale_points(
 
 
 def draw_axes(svg: List[str], left: float, top: float, width: float, height: float, title: str, y_min: float, y_max: float) -> None:
-    svg.append(f'<rect x="{left:.2f}" y="{top:.2f}" width="{width:.2f}" height="{height:.2f}" fill="#101924" stroke="#314154" stroke-width="1"/>')
+    svg.append(f'<rect x="{left:.2f}" y="{top:.2f}" width="{width:.2f}" height="{height:.2f}" fill="#101924" stroke="#314154" stroke-width="1" rx="18"/>')
     svg.append(f'<text x="{left:.2f}" y="{top - 14:.2f}" fill="#dce7f3" font-size="18" font-family="DejaVu Sans, sans-serif">{title}</text>')
 
     for tick in range(5):
@@ -68,6 +68,7 @@ def add_series(
     top: float,
     width: float,
     height: float,
+    title: str,
     metrics: List[Tuple[str, str, str]],
 ) -> None:
     if not rows:
@@ -81,7 +82,7 @@ def add_series(
     y_min -= margin
     y_max += margin
 
-    draw_axes(svg, left, top, width, height, "", y_min, y_max)
+    draw_axes(svg, left, top, width, height, title, y_min, y_max)
 
     for key, label, color in metrics:
         points = [(float(row[x_key]), float(row[key])) for row in rows]
@@ -102,29 +103,49 @@ def add_series(
         svg.append(f'<text x="{legend_x + 24:.2f}" y="{offset_y + 4:.2f}" fill="#dce7f3" font-size="12" font-family="DejaVu Sans, sans-serif">{label}</text>')
 
 
+def add_stat_card(svg: List[str], x: float, y: float, width: float, title: str, value: str) -> None:
+    svg.append(f'<rect x="{x:.2f}" y="{y:.2f}" width="{width:.2f}" height="82.00" rx="18" fill="#101924" stroke="#314154" stroke-width="1"/>')
+    svg.append(f'<text x="{x + 18:.2f}" y="{y + 28:.2f}" fill="#8ea6bd" font-size="12" font-family="DejaVu Sans, sans-serif" letter-spacing="1.2">{title}</text>')
+    svg.append(f'<text x="{x + 18:.2f}" y="{y + 58:.2f}" fill="#f4f8fc" font-size="24" font-family="DejaVu Sans, sans-serif">{value}</text>')
+
+
 def render_svg(rows: List[Dict[str, float | str]], output_path: str) -> None:
     width = 1200
-    height = 860
+    height = 1160
     svg: List[str] = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
         '<rect width="100%" height="100%" fill="#08111b"/>',
         '<text x="60" y="50" fill="#f4f8fc" font-size="28" font-family="DejaVu Sans, sans-serif">Neuro Motor CPP - PPO Learning Curve</text>',
-        '<text x="60" y="80" fill="#9cb3ca" font-size="14" font-family="DejaVu Sans, sans-serif">Learning curve generated from the continuous-control PPO baseline and exported metrics</text>',
+        '<text x="60" y="80" fill="#9cb3ca" font-size="14" font-family="DejaVu Sans, sans-serif">Learning curve generated from the continuous-control PPO baseline, with stability and efficiency diagnostics.</text>',
     ]
 
-    top_left = 60
-    chart_width = 1080
-    chart_height = 280
+    final = rows[-1]
+    card_y = 110
+    card_width = 196
+    card_gap = 16
+    stats = [
+        ("Final Value Loss", f"{float(final['value_loss']):.3f}"),
+        ("Final Entropy", f"{float(final['entropy']):.3f}"),
+        ("Action Std", f"{float(final['action_std']):.3f}"),
+        ("Latency", f"{float(final['inference_latency_ms']):.3f} ms"),
+        ("Throughput", f"{float(final['samples_per_second']):.0f} sps"),
+    ]
+    for index, (title, value) in enumerate(stats):
+        add_stat_card(svg, 60 + index * (card_width + card_gap), card_y, card_width, title, value)
 
-    svg.append('<text x="60" y="120" fill="#dce7f3" font-size="18" font-family="DejaVu Sans, sans-serif">Optimization diagnostics</text>')
+    chart_left = 60
+    chart_width = 1080
+    chart_height = 250
+
     add_series(
         svg,
         rows,
         "update",
-        top_left,
-        140,
+        chart_left,
+        250,
         chart_width,
         chart_height,
+        "Optimization diagnostics",
         [
             ("policy_loss", "policy loss", "#4fc3f7"),
             ("value_loss", "value loss", "#ffca28"),
@@ -133,37 +154,53 @@ def render_svg(rows: List[Dict[str, float | str]], output_path: str) -> None:
         ],
     )
 
-    svg.append('<text x="60" y="470" fill="#dce7f3" font-size="18" font-family="DejaVu Sans, sans-serif">Control performance</text>')
     add_series(
         svg,
         rows,
         "update",
-        top_left,
-        490,
+        chart_left,
+        590,
         chart_width,
         chart_height,
+        "Control quality",
         [
             ("avg_episode_return", "avg episode return", "#42a5f5"),
             ("success_rate", "success rate", "#ab47bc"),
-            ("avg_episode_length", "avg episode length", "#ffa726"),
             ("action_std", "action std", "#26a69a"),
+            ("explained_variance", "explained variance", "#ffa726"),
         ],
     )
 
-    svg.append("</svg>")
+    add_series(
+        svg,
+        rows,
+        "update",
+        chart_left,
+        930,
+        chart_width,
+        chart_height,
+        "Efficiency diagnostics",
+        [
+            ("update_time_ms", "update time ms", "#29b6f6"),
+            ("samples_per_second", "samples per second", "#8bc34a"),
+            ("inference_latency_ms", "inference latency ms", "#ff7043"),
+        ],
+    )
+
+    svg.append('</svg>')
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    with open(output_path, "w", encoding="utf-8") as handle:
-        handle.write("\n".join(svg))
+    with open(output_path, 'w', encoding='utf-8') as handle:
+        handle.write('\n'.join(svg))
 
 
 def main() -> int:
     if len(sys.argv) != 3:
-        print("usage: plot_learning_curve.py <input.csv> <output.svg>", file=sys.stderr)
+        print('usage: plot_learning_curve.py <input.csv> <output.svg>', file=sys.stderr)
         return 1
 
     rows = read_rows(sys.argv[1])
     if not rows:
-        print("csv has no rows", file=sys.stderr)
+        print('csv has no rows', file=sys.stderr)
         return 1
 
     render_svg(rows, sys.argv[2])
@@ -171,5 +208,5 @@ def main() -> int:
     return 0
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     raise SystemExit(main())
