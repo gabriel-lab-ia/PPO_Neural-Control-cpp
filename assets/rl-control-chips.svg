@@ -1,0 +1,28 @@
+<svg width="1320" height="96" viewBox="0 0 1320 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">RL and Control Chips</title>
+  <desc id="desc">Reinforcement Learning, PPO Baseline, Continuous Control, Orbital Simulation</desc>
+  <defs>
+    <linearGradient id="rlPanel" x1="0" y1="0" x2="1320" y2="96" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#07161E"/>
+      <stop offset="1" stop-color="#0A2428"/>
+    </linearGradient>
+    <linearGradient id="rlChip" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#0E3644"/>
+      <stop offset="1" stop-color="#145162"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="1" y="1" width="1318" height="94" rx="18" fill="url(#rlPanel)" stroke="#2D6F7B" stroke-opacity="0.62"/>
+
+  <rect x="26" y="24" width="336" height="48" rx="14" fill="url(#rlChip)" stroke="#3F95A3"/>
+  <text x="194" y="53" text-anchor="middle" fill="#D5F7FF" font-family="Inter, Segoe UI, Arial" font-size="20" font-weight="600">Reinforcement Learning</text>
+
+  <rect x="382" y="24" width="234" height="48" rx="14" fill="url(#rlChip)" stroke="#3F95A3"/>
+  <text x="499" y="53" text-anchor="middle" fill="#D5F7FF" font-family="Inter, Segoe UI, Arial" font-size="20" font-weight="600">PPO Baseline</text>
+
+  <rect x="636" y="24" width="280" height="48" rx="14" fill="url(#rlChip)" stroke="#3F95A3"/>
+  <text x="776" y="53" text-anchor="middle" fill="#D5F7FF" font-family="Inter, Segoe UI, Arial" font-size="20" font-weight="600">Continuous Control</text>
+
+  <rect x="936" y="24" width="300" height="48" rx="14" fill="url(#rlChip)" stroke="#3F95A3"/>
+  <text x="1086" y="53" text-anchor="middle" fill="#D5F7FF" font-family="Inter, Segoe UI, Arial" font-size="20" font-weight="600">Orbital Simulation</text>
+</svg>

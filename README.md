@@ -8,21 +8,26 @@
 
 CPU-first by design. LibTorch on CPU is the active inference/training backend. MuJoCo is optional. TensorRT is architected as a future backend path and remains disabled by default.
 
+## Stack and Engineering Identity
+
+<p align="center"><strong>CORE STACK</strong></p>
 <p align="center">
-  <a href="https://github.com/gabriel-lab-ia/PPO_Neural-Control-cpp/actions/workflows/ci.yml"><img src="https://github.com/gabriel-lab-ia/PPO_Neural-Control-cpp/actions/workflows/ci.yml/badge.svg" alt="CI build" /></a>
-  <img src="https://img.shields.io/badge/Linux-First-1E3A52.svg" alt="Linux first" />
-  <img src="https://img.shields.io/badge/C%2B%2B-20-0C63A7.svg" alt="C++20" />
-  <img src="https://img.shields.io/badge/RL-PPO-1F6ED4.svg" alt="RL PPO" />
-  <img src="https://img.shields.io/badge/LibTorch-CPU-1D6A3A.svg" alt="LibTorch CPU" />
-  <img src="https://img.shields.io/badge/SQLite-Telemetry-0B7285.svg" alt="SQLite telemetry" />
+  <img src="assets/stack-core-chips.svg" alt="Core Stack chips: Linux-First, C++20, LibTorch, SQLite" width="100%" />
 </p>
 
+<p align="center"><strong>RL &amp; CONTROL</strong></p>
 <p align="center">
-  <img src="https://img.shields.io/badge/Simulation-Orbital%20Direction-1C7ED6.svg" alt="Orbital direction" />
-  <img src="https://img.shields.io/badge/MLOps-MLflow-0A9396.svg" alt="MLflow" />
-  <img src="https://img.shields.io/badge/Benchmarking-Reproducible-2B8A3E.svg" alt="Benchmarking" />
-  <img src="https://img.shields.io/badge/UML-Architecture%20Driven-364FC7.svg" alt="UML" />
-  <img src="https://img.shields.io/badge/Frontend-Next.js%20%2B%20Three.js-111827.svg" alt="Frontend" />
+  <img src="assets/rl-control-chips.svg" alt="RL and Control chips: Reinforcement Learning, PPO Baseline, Continuous Control, Orbital Simulation" width="100%" />
+</p>
+
+<p align="center"><strong>ENGINEERING DISCIPLINE</strong></p>
+<p align="center">
+  <img src="assets/engineering-chips.svg" alt="Engineering Discipline chips: UML Architecture, Systems Engineering, MLOps Mindset, Reproducible Benchmarks, Telemetry Tracking" width="100%" />
+</p>
+
+<p align="center"><strong>INTERFACE &amp; EXPERIENCE</strong></p>
+<p align="center">
+  <img src="assets/interface-chips.svg" alt="Interface and Experience chips: UX-Oriented Visualization, Mission Replay UI, CLI Tooling, Structured Experiment Outputs" width="100%" />
 </p>
 
 <p align="center">
@@ -293,4 +298,3 @@ Optional integrations remain guarded and do not destabilize baseline CI.
 - formalized RL vs LQR/MPC benchmark packs
 - TensorRT inference backend integration (optional, future)
 - embedded inference pipeline hardening (ARM targets)
-

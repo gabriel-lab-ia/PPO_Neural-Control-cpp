@@ -1,0 +1,28 @@
+<svg width="1320" height="96" viewBox="0 0 1320 96" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Core Stack Chips</title>
+  <desc id="desc">Linux-First, C++20, LibTorch, SQLite</desc>
+  <defs>
+    <linearGradient id="corePanel" x1="0" y1="0" x2="1320" y2="96" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A1224"/>
+      <stop offset="1" stop-color="#0E1A34"/>
+    </linearGradient>
+    <linearGradient id="coreChip" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#16284E"/>
+      <stop offset="1" stop-color="#1E3263"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="1" y="1" width="1318" height="94" rx="18" fill="url(#corePanel)" stroke="#334B82" stroke-opacity="0.55"/>
+
+  <rect x="26" y="24" width="246" height="48" rx="14" fill="url(#coreChip)" stroke="#4E6FB7"/>
+  <text x="149" y="53" text-anchor="middle" fill="#D7E6FF" font-family="Inter, Segoe UI, Arial" font-size="20" font-weight="600">Linux-First</text>
+
+  <rect x="292" y="24" width="188" height="48" rx="14" fill="url(#coreChip)" stroke="#4E6FB7"/>
+  <text x="386" y="53" text-anchor="middle" fill="#D7E6FF" font-family="Inter, Segoe UI, Arial" font-size="20" font-weight="600">C++20</text>
+
+  <rect x="500" y="24" width="198" height="48" rx="14" fill="url(#coreChip)" stroke="#4E6FB7"/>
+  <text x="599" y="53" text-anchor="middle" fill="#D7E6FF" font-family="Inter, Segoe UI, Arial" font-size="20" font-weight="600">LibTorch</text>
+
+  <rect x="718" y="24" width="170" height="48" rx="14" fill="url(#coreChip)" stroke="#4E6FB7"/>
+  <text x="803" y="53" text-anchor="middle" fill="#D7E6FF" font-family="Inter, Segoe UI, Arial" font-size="20" font-weight="600">SQLite</text>
+</svg>
