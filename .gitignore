@@ -30,14 +30,18 @@
 *.kdbx
 secrets/
 
-# Experiment outputs
-artifacts/
-checkpoints/
-datasets/
-logs/
-runs/
-tmp/
+# Experiment outputs (repo-root only)
+/artifacts/
+/checkpoints/
+/datasets/
+/logs/
+/runs/
+/tmp/
 MUJOCO_LOG.TXT
+
+# Never ignore source files under infrastructure artifacts module
+!src/infrastructure/artifacts/
+!src/infrastructure/artifacts/**
 
 # Public repository dependency strategy
 lib/libtorch/
