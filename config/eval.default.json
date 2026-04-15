@@ -1,0 +1,9 @@
+{
+  "checkpoint_path": "artifacts/latest/checkpoint.pt",
+  "environment": "point_mass",
+  "episodes": 10,
+  "max_steps": 240,
+  "seed": 7,
+  "deterministic_policy": true,
+  "inference_backend": "libtorch"
+}

@@ -1,0 +1,5 @@
+{
+  "benchmark_name": "smoke",
+  "seed": 7,
+  "quick": true
+}

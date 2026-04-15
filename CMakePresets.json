@@ -16,7 +16,8 @@
         "NMC_ENABLE_WARNINGS": "ON",
         "NMC_ENABLE_ASAN": "OFF",
         "NMC_ENABLE_UBSAN": "OFF",
-        "NMC_ENABLE_LTO": "OFF"
+        "NMC_ENABLE_LTO": "OFF",
+        "NMC_ENABLE_MUJOCO": "OFF"
       }
     },
     {
@@ -35,15 +36,24 @@
       "name": "build",
       "configurePreset": "dev",
       "targets": [
-        "motor"
+        "nmc"
       ]
     },
     {
       "name": "build-debug",
       "configurePreset": "debug-sanitized",
       "targets": [
-        "motor"
+        "nmc"
       ]
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "test",
+      "configurePreset": "dev",
+      "output": {
+        "outputOnFailure": true
+      }
     }
   ]
 }

@@ -1,176 +1,186 @@
-# Neuro Motor CPP
+# PPO Neural Control C++
 
-<p align="center">
-  <img src="docs/assets/repo-banner.svg" alt="Repository banner" width="100%" />
-</p>
+A disciplined C++20 reinforcement learning systems baseline for PPO.
 
-<p align="center">
-  <img src="https://img.shields.io/badge/C%2B%2B-20-044F88.svg" alt="C++20" />
-  <img src="https://img.shields.io/badge/RL-PPO-8A2BE2.svg" alt="PPO" />
-  <img src="https://img.shields.io/badge/Backend-LibTorch-C0392B.svg" alt="LibTorch" />
-  <img src="https://img.shields.io/badge/Simulation-MuJoCo-1D8348.svg" alt="MuJoCo" />
-  <img src="https://img.shields.io/badge/Frontend-3D%20HTML%20Viewer-D68910.svg" alt="3D HTML viewer" />
-</p>
+This repository is now organized as a CPU-first, reproducible RL project with clear boundaries between domain logic, application orchestration, infrastructure, and interfaces. It keeps optional MuJoCo support and prepares a future inference backend path (TensorRT) without enabling it yet.
 
-`Neuro Motor CPP` is a modern C++20 reinforcement learning project that combines `LibTorch`, `PPO`, `MuJoCo`, and browser-delivered neural visualization. It is designed as a serious research-engineering baseline for continuous control, with a public static site that exposes trained-policy structure, learning curves, and interactive 3D network inspection.
+## What it is now
 
-## Visual Overview
+- PPO training baseline in modern C++20 + LibTorch (CPU).
+- Explicit `train`, `eval`, and `benchmark` operational flows.
+- Reproducible run artifacts with per-run manifests.
+- Local SQLite experiment tracking and telemetry.
+- CI smoke benchmark that compiles and validates generated artifacts.
 
-<p align="center">
-  <img src="docs/assets/engine-banner.svg" alt="Training engine banner" width="48%" />
-  <img src="docs/assets/viewer-banner.svg" alt="Viewer banner" width="48%" />
-</p>
+## What it is not (yet)
 
-## Public Links
+- No active CUDA path.
+- No active TensorRT runtime integration.
+- No full orbital dynamics domain migration yet.
 
-- Live project page: `https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/`
-- Direct 3D viewer: `https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/demo/neural_network_3d.html`
-- Learning curve: `https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/demo/learning_curve.svg`
-- Benchmark summary: `https://gabriel-lab-ia.github.io/PPO_Neural-Control-cpp/demo/benchmark_summary.json`
+## Architecture
 
-## Highlights
+Source layout:
 
-- PPO implementation in modern C++ with `LibTorch`
-- optional MuJoCo integration through a clean `Environment` interface
-- critic stabilization with value clipping and robust value loss
-- low-latency policy inference with benchmark export
-- CSV metrics and SVG learning curves
-- live rollout capture from the trained policy
-- standalone 3D HTML viewer for policy structure and sampled activations
-- touch-friendly mobile interaction in the public visualization
-- static publishing path through `docs/` for GitHub Pages
+- `src/domain/`
+  - `config/`: explicit train/eval/benchmark configuration models.
+  - `env/`: `Environment` interface + concrete envs (`point_mass`, optional `mujoco_cartpole`).
+  - `ppo/`: policy/value model, rollout types, PPO trainer.
+  - `inference/`: inference backend interface + LibTorch backend + TensorRT stub.
+- `src/application/`
+  - training/evaluation/benchmark runners.
+- `src/infrastructure/`
+  - artifact layout + checkpoint management.
+  - SQLite persistence (`runs`, `episodes`, `events`, `benchmarks`).
+  - CSV/live rollout reporting.
+- `src/interfaces/`
+  - CLI and entrypoint.
+- `src/common/`
+  - shared utilities.
 
-## Repository Layout
+Detailed docs and UML:
 
-- `src/app/`: application entrypoints and training orchestration
-- `src/env/`: environment interface and concrete environments
-- `src/model/`: PPO agent, policy network, and value network
-- `src/train/`: rollout collection, GAE, and PPO optimization
-- `src/utils/`: logging, artifact export, and 3D neural viewer generation
-- `assets/mujoco/`: MuJoCo XML assets
-- `tools/`: setup, plotting, viewing, and publishing scripts
-- `docs/`: static site and GitHub Pages output
-- `notebooks/`: analysis notebooks
-
-## Technical Focus
-
-This repository is strongest as:
-
-- a formal PPO reference implementation in C++
-- a MuJoCo-ready continuous-control baseline
-- a neural visualization project that turns policy internals into a public 3D browser artifact
-
-The codebase emphasizes a clean systems-level reinforcement learning stack rather than a broad plugin ecosystem. The current scope favors clarity, reproducibility, and controllable performance characteristics.
+- `docs/architecture.md`
+- `docs/uml/component-diagram.md`
+- `docs/uml/class-diagram.md`
+- `docs/uml/sequence-training.md`
+- `docs/roadmap.md`
 
 ## Requirements
 
-- GCC 13+
 - CMake 3.24+
-- LibTorch 2.2.2
-- Eigen
-- MuJoCo 3.2.6 or newer for MuJoCo environments
+- C++20 compiler (GCC 13+ recommended)
+- LibTorch CPU (default helper script provided)
+- SQLite runtime library (`libsqlite3`)
+- Optional MuJoCo for `mujoco_cartpole`
 
-## Quick Start
+## Setup
 
-This repository does not commit LibTorch binaries. If `lib/libtorch/` is missing, install the CPU package locally:
+Install LibTorch CPU locally (if `lib/libtorch` is missing):
 
 ```bash
 bash tools/setup_libtorch_cpu.sh
 ```
 
-Configure:
+Configure and build:
 
 ```bash
 cmake --preset dev
-```
-
-Build:
-
-```bash
 cmake --build --preset build
 ```
 
-Run the default PPO baseline:
+## CLI commands
+
+### Train
 
 ```bash
-./build/motor
+./build/nmc train --env point_mass --seed 7 --updates 30
 ```
 
-Generate the learning-curve SVG:
+Example with explicit hyperparameters:
 
 ```bash
-python3 tools/plot_learning_curve.py artifacts/learning_curve.csv artifacts/learning_curve.svg
+./build/nmc train \
+  --env point_mass \
+  --seed 7 \
+  --num-envs 16 \
+  --updates 30 \
+  --rollout-steps 128 \
+  --ppo-epochs 5 \
+  --minibatch-size 192 \
+  --hidden-dim 96 \
+  --learning-rate 0.0003
 ```
 
-## MuJoCo Training
+### Evaluate
 
-Build with MuJoCo support:
+```bash
+./build/nmc eval --checkpoint artifacts/latest/checkpoint.pt --episodes 10 --backend libtorch
+```
+
+### Smoke benchmark
+
+```bash
+./build/nmc benchmark --quick --name smoke
+```
+
+Script aliases:
+
+```bash
+./scripts/train.sh ...
+./scripts/eval.sh ...
+./scripts/benchmark_smoke.sh
+```
+
+## Artifact layout
+
+Generated under `artifacts/`:
+
+```text
+artifacts/
+  runs/<run_id>/
+    manifest.json
+    training_metrics.csv
+    training_summary.json
+    evaluation_summary.json
+    live_rollout.csv
+    checkpoints/
+      policy_last.pt
+      policy_last.meta
+  checkpoints/
+  reports/
+  benchmarks/
+  latest/
+  experiments.sqlite
+```
+
+Each run writes structured metadata (`manifest.json`) and summary outputs.
+
+## SQLite tracking
+
+Database: `artifacts/experiments.sqlite`
+
+Tables:
+
+- `runs`: mode, status, config JSON, summary JSON.
+- `episodes`: episode-level telemetry for train/eval.
+- `events`: run lifecycle and important events.
+- `benchmarks`: benchmark summary records.
+
+## MuJoCo (optional)
+
+Enable and build with MuJoCo:
 
 ```bash
 cmake --preset dev -DNMC_ENABLE_MUJOCO=ON -DNMC_MUJOCO_ROOT=$HOME/.local/mujoco-3.2.6
 cmake --build --preset build
 ```
 
-Train the PPO agent in MuJoCo:
+Run with MuJoCo environment:
 
 ```bash
-NMC_ENV=mujoco_cartpole ./build/motor
+./build/nmc train --env mujoco_cartpole
 ```
 
-Run a live policy rollout after training:
+## Future TensorRT direction
 
-```bash
-NMC_ENV=mujoco_cartpole NMC_LIVE_POLICY=1 NMC_LIVE_STEPS=64 ./build/motor
-```
+The inference abstraction (`domain/inference/PolicyInferenceBackend`) is already in place.
 
-## Visualization
+- Active now: `LibTorchPolicyBackend`.
+- Placeholder: `TensorRtPolicyBackendStub`.
 
-Open the generated 3D network viewer locally:
+This keeps today’s setup simple and CPU-first while preserving a clean extension point for future TensorRT inference.
 
-```bash
-xdg-open artifacts/neural_network_3d.html
-```
+## CI
 
-Open the MuJoCo viewer for the project cart-pole:
+GitHub Actions pipeline (`.github/workflows/ci.yml`) performs:
 
-```bash
-./tools/view_mujoco.sh
-```
+1. Configure and build.
+2. Run smoke benchmark (`ctest -R nmc_smoke_benchmark`).
+3. Validate critical artifact outputs exist.
 
-## Web Publishing
+## Orbital/satellite direction
 
-This repository is prepared for static deployment through GitHub Pages.
+The long-term target remains autonomous orbital/satellite control.
 
-Sync the current demo into `docs/`:
-
-```bash
-python3 tools/publish_demo.py
-```
-
-The committed web assets are expected under `docs/demo/`.
-
-After pushing the repository to GitHub and enabling Pages, the generated site exposes:
-
-- `/` landing page
-- `/demo/neural_network_3d.html` direct 3D neural viewer
-- `/demo/learning_curve.svg` exported learning curve
-- `/demo/benchmark_summary.json` benchmark and efficiency snapshot
-
-## Generated Outputs
-
-- `artifacts/learning_curve.csv`
-- `artifacts/learning_curve.svg`
-- `artifacts/live_rollout.csv`
-- `artifacts/benchmark_summary.json`
-- `artifacts/neural_network_3d.html`
-- `artifacts/neural_network_3d.json`
-
-## Development Notes
-
-- The default CI build targets the non-MuJoCo baseline so public builds stay lightweight.
-- MuJoCo support is optional and activated through `NMC_ENABLE_MUJOCO`.
-- The static site is generated from local artifacts; `docs/` is the publishable output.
-
-## License
-
-This project is distributed under the MIT License. See [LICENSE](LICENSE).
+This refactor intentionally focuses on reusable RL systems foundations so new environments (e.g., orbital dynamics) can be plugged into `domain/env` without rewriting the PPO core.
