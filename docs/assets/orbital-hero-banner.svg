@@ -1,107 +1,102 @@
-<svg width="1600" height="620" viewBox="0 0 1600 620" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+<svg width="1600" height="420" viewBox="0 0 1600 420" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
   <title id="title">Orbital Neural Control CPP hero banner</title>
-  <desc id="desc">Mission-control style orbital autonomy hero with Earth curvature, telemetry overlays, and reinforcement learning control signals.</desc>
+  <desc id="desc">Premium orbital autonomy hero with balanced typography, compact capability chips, and a secondary telemetry panel.</desc>
+
   <defs>
-    <linearGradient id="bg" x1="60" y1="20" x2="1540" y2="600" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#050B12"/>
-      <stop offset="0.45" stop-color="#081521"/>
-      <stop offset="1" stop-color="#060A10"/>
+    <linearGradient id="bg" x1="80" y1="20" x2="1520" y2="400" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#080E17"/>
+      <stop offset="0.55" stop-color="#0A1625"/>
+      <stop offset="1" stop-color="#08111C"/>
     </linearGradient>
-    <radialGradient id="earthGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(780 730) rotate(90) scale(320 680)">
-      <stop stop-color="#2B8CFF" stop-opacity="0.55"/>
-      <stop offset="1" stop-color="#2B8CFF" stop-opacity="0"/>
+
+    <radialGradient id="softGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(860 460) rotate(90) scale(170 780)">
+      <stop stop-color="#2A7BFF" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#2A7BFF" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="arcA" x1="240" y1="470" x2="1390" y2="250" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#49A3FF"/>
-      <stop offset="1" stop-color="#39E1A6"/>
+
+    <linearGradient id="chipFill" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#101D2D"/>
+      <stop offset="1" stop-color="#122338"/>
     </linearGradient>
-    <linearGradient id="arcB" x1="340" y1="500" x2="1320" y2="280" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#2D7DFF"/>
-      <stop offset="1" stop-color="#70F0C4"/>
+
+    <linearGradient id="panelFill" x1="1088" y1="78" x2="1488" y2="328" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#101B2B"/>
+      <stop offset="1" stop-color="#0B1421"/>
     </linearGradient>
-    <linearGradient id="panel" x1="1040" y1="96" x2="1500" y2="486" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#101D2C"/>
-      <stop offset="1" stop-color="#0A131E"/>
+
+    <linearGradient id="lineA" x1="1122" y1="174" x2="1450" y2="174" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4B90FF"/>
+      <stop offset="1" stop-color="#56E0C0"/>
+    </linearGradient>
+
+    <linearGradient id="lineB" x1="1122" y1="252" x2="1450" y2="252" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5D8EFF"/>
+      <stop offset="1" stop-color="#9E7AFF"/>
     </linearGradient>
   </defs>
 
-  <rect width="1600" height="620" rx="28" fill="url(#bg)"/>
+  <!-- Outer frame -->
+  <rect x="8" y="8" width="1584" height="404" rx="22" fill="url(#bg)" stroke="#25364D" stroke-width="1.4"/>
+  <ellipse cx="820" cy="426" rx="730" ry="156" fill="url(#softGlow)"/>
 
-  <g opacity="0.22" stroke="#213549" stroke-width="1">
-    <path d="M80 520H1520"/>
-    <path d="M80 472H1520"/>
-    <path d="M80 424H1520"/>
-    <path d="M80 376H1520"/>
-    <path d="M80 328H1520"/>
-    <path d="M80 280H1520"/>
-    <path d="M80 232H1520"/>
-    <path d="M80 184H1520"/>
-    <path d="M80 136H1520"/>
+  <!-- Subtle guides -->
+  <g opacity="0.2" stroke="#203347" stroke-width="1">
+    <path d="M96 94H1504"/>
+    <path d="M96 138H1504"/>
+    <path d="M96 182H1504"/>
+    <path d="M96 226H1504"/>
+    <path d="M96 270H1504"/>
+    <path d="M96 314H1504"/>
   </g>
 
-  <g fill="#9EC1E5" opacity="0.5">
-    <circle cx="180" cy="88" r="2"/>
-    <circle cx="342" cy="62" r="1.5"/>
-    <circle cx="486" cy="104" r="2"/>
-    <circle cx="620" cy="70" r="1.6"/>
-    <circle cx="872" cy="86" r="1.8"/>
-    <circle cx="1042" cy="64" r="2"/>
-    <circle cx="1218" cy="100" r="1.4"/>
-    <circle cx="1368" cy="72" r="2"/>
-    <circle cx="1492" cy="98" r="1.6"/>
+  <!-- Left content column (safe width) -->
+  <text x="96" y="86" fill="#4DDEAE" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="1.2">
+    ORBITAL AUTONOMY + RL SYSTEMS ENGINEERING
+  </text>
+
+  <text x="96" y="160" fill="#EDF5FF" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="60" font-weight="700">
+    Orbital Neural Control CPP
+  </text>
+
+  <text fill="#AFC4DE" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="25" font-weight="500">
+    <tspan x="96" y="208">C++20 platform for orbital simulation, PPO-based control, telemetry tracking,</tspan>
+    <tspan x="96" y="240">and reproducible experiment workflows.</tspan>
+  </text>
+
+  <!-- Capability chips (compact, no collision) -->
+  <g font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" fill="#E7F1FE">
+    <rect x="96" y="278" width="216" height="42" rx="12" fill="url(#chipFill)" stroke="#345375"/>
+    <text x="204" y="305" text-anchor="middle">Orbital Simulation</text>
+
+    <rect x="326" y="278" width="176" height="42" rx="12" fill="url(#chipFill)" stroke="#345375"/>
+    <text x="414" y="305" text-anchor="middle">PPO Control</text>
+
+    <rect x="516" y="278" width="154" height="42" rx="12" fill="url(#chipFill)" stroke="#345375"/>
+    <text x="593" y="305" text-anchor="middle">Telemetry</text>
+
+    <rect x="684" y="278" width="274" height="42" rx="12" fill="url(#chipFill)" stroke="#345375"/>
+    <text x="821" y="305" text-anchor="middle">Reproducible Benchmarks</text>
   </g>
 
-  <ellipse cx="790" cy="690" rx="760" ry="250" fill="url(#earthGlow)"/>
-  <path d="M60 560C270 492 512 462 794 462C1070 462 1314 492 1540 560" stroke="#3E95FF" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
-
-  <path d="M180 482C360 382 590 318 812 304C1068 288 1260 332 1442 412" stroke="url(#arcA)" stroke-width="3.5" stroke-linecap="round"/>
-  <path d="M248 514C442 420 620 368 802 354C1030 336 1208 370 1360 436" stroke="url(#arcB)" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
-
+  <!-- Right support panel (smaller + secondary) -->
   <g>
-    <rect x="632" y="282" width="24" height="12" rx="3" fill="#84BFFF"/>
-    <rect x="616" y="286" width="14" height="4" rx="2" fill="#6BA9E5"/>
-    <rect x="658" y="286" width="14" height="4" rx="2" fill="#6BA9E5"/>
-    <circle cx="644" cy="296" r="3" fill="#3DE0A7"/>
-  </g>
-  <g>
-    <rect x="1018" y="332" width="24" height="12" rx="3" fill="#84BFFF"/>
-    <rect x="1002" y="336" width="14" height="4" rx="2" fill="#6BA9E5"/>
-    <rect x="1044" y="336" width="14" height="4" rx="2" fill="#6BA9E5"/>
-    <circle cx="1030" cy="346" r="3" fill="#3DE0A7"/>
-  </g>
+    <rect x="1088" y="78" width="400" height="250" rx="16" fill="url(#panelFill)" stroke="#294059"/>
+    <text x="1122" y="112" fill="#E3EEFC" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="19" font-weight="700">
+      Telemetry Snapshot
+    </text>
 
-  <text x="92" y="118" fill="#3CDBA7" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="2">ORBITAL AUTONOMY + RL SYSTEMS ENGINEERING</text>
-  <text x="92" y="202" fill="#EEF6FF" font-family="DejaVu Sans, Arial, sans-serif" font-size="62" font-weight="700">Orbital Neural Control CPP</text>
-  <text x="92" y="258" fill="#B6CBE3" font-family="DejaVu Sans, Arial, sans-serif" font-size="28">C++20 mission simulation platform for autonomous control policy training and telemetry-driven validation.</text>
-  <text x="92" y="296" fill="#93AECD" font-family="DejaVu Sans, Arial, sans-serif" font-size="23">PPO + LibTorch CPU, benchmarkable workflows, SQLite experiment tracking, and layered engineering architecture.</text>
+    <text x="1122" y="142" fill="#A4BCD9" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14">
+      Policy cadence and mission residual trends
+    </text>
 
-  <g>
-    <rect x="92" y="336" width="210" height="48" rx="24" fill="#0E1B2B" stroke="#2C4259"/>
-    <rect x="316" y="336" width="182" height="48" rx="24" fill="#0E1B2B" stroke="#2C4259"/>
-    <rect x="512" y="336" width="194" height="48" rx="24" fill="#0E1B2B" stroke="#2C4259"/>
-    <rect x="720" y="336" width="208" height="48" rx="24" fill="#0E1B2B" stroke="#2C4259"/>
-    <text x="132" y="367" fill="#DEEBFA" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700">Orbital simulation</text>
-    <text x="354" y="367" fill="#DEEBFA" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700">PPO control</text>
-    <text x="548" y="367" fill="#DEEBFA" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700">Mission telemetry</text>
-    <text x="758" y="367" fill="#DEEBFA" font-family="DejaVu Sans, Arial, sans-serif" font-size="20" font-weight="700">Repro benchmarks</text>
-  </g>
+    <rect x="1122" y="160" width="330" height="50" rx="10" fill="#0B1625" stroke="#2B4663"/>
+    <path d="M1140 190C1170 176 1208 170 1242 178C1276 186 1308 202 1342 198C1376 194 1410 176 1444 166" stroke="url(#lineA)" stroke-width="2.8" stroke-linecap="round"/>
 
-  <g>
-    <rect x="1036" y="94" width="468" height="396" rx="22" fill="url(#panel)" stroke="#253A51"/>
-    <text x="1068" y="132" fill="#E2EEFC" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700">Mission control telemetry</text>
+    <rect x="1122" y="238" width="330" height="50" rx="10" fill="#0B1625" stroke="#2B4663"/>
+    <path d="M1140 266C1172 272 1206 262 1240 254C1274 246 1308 248 1342 258C1374 268 1408 270 1444 256" stroke="url(#lineB)" stroke-width="2.8" stroke-linecap="round"/>
 
-    <rect x="1068" y="154" width="404" height="80" rx="14" fill="#0A1421" stroke="#29435B"/>
-    <text x="1092" y="185" fill="#B8CEE6" font-family="DejaVu Sans, Arial, sans-serif" font-size="17">policy update cadence</text>
-    <path d="M1092 206C1138 190 1186 176 1230 182C1272 188 1310 212 1358 210C1402 208 1432 186 1460 164" stroke="#46A0FF" stroke-width="3" stroke-linecap="round"/>
-
-    <rect x="1068" y="248" width="404" height="80" rx="14" fill="#0A1421" stroke="#29435B"/>
-    <text x="1092" y="279" fill="#B8CEE6" font-family="DejaVu Sans, Arial, sans-serif" font-size="17">orbit tracking residuals</text>
-    <path d="M1092 300C1140 302 1180 286 1226 282C1270 278 1302 296 1344 304C1384 312 1422 304 1460 286" stroke="#38DEA4" stroke-width="3" stroke-linecap="round"/>
-
-    <rect x="1068" y="342" width="404" height="128" rx="14" fill="#0A1421" stroke="#29435B"/>
-    <text x="1092" y="374" fill="#D4E4F7" font-family="DejaVu Sans, Arial, sans-serif" font-size="18" font-weight="700">runtime channels</text>
-    <text x="1092" y="402" fill="#9AB5D2" font-family="DejaVu Sans, Arial, sans-serif" font-size="16">train | eval | benchmark</text>
-    <text x="1092" y="426" fill="#9AB5D2" font-family="DejaVu Sans, Arial, sans-serif" font-size="16">runs | episodes | events | reports</text>
-    <text x="1092" y="450" fill="#9AB5D2" font-family="DejaVu Sans, Arial, sans-serif" font-size="16">CPU-first deterministic CI smoke path</text>
+    <text x="1122" y="308" fill="#8EA9C8" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="13">
+      CPU-first | Train • Eval • Benchmark
+    </text>
   </g>
 </svg>
