@@ -1,0 +1,66 @@
+<svg width="1180" height="318" viewBox="0 0 1180 318" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Stack and Engineering Identity</title>
+  <desc id="desc">Compact premium chip layout for core stack, RL control, engineering discipline, and interface experience.</desc>
+  <defs>
+    <linearGradient id="panel" x1="12" y1="12" x2="1168" y2="306" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A101D"/>
+      <stop offset="1" stop-color="#0E1422"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="10" y="10" width="1160" height="298" rx="20" fill="url(#panel)" stroke="#243046" stroke-opacity="0.9"/>
+
+  <text x="34" y="40" fill="#DCE7FF" font-family="Inter, Segoe UI, Arial" font-size="16" font-weight="700" letter-spacing="0.8">STACK &amp; ENGINEERING IDENTITY</text>
+  <text x="34" y="64" fill="#8EA3C8" font-family="Inter, Segoe UI, Arial" font-size="12" font-weight="500" letter-spacing="0.35">CPU-first reinforcement learning systems foundation for orbital autonomy engineering</text>
+
+  <text x="34" y="92" fill="#7392D6" font-family="Inter, Segoe UI, Arial" font-size="11" font-weight="700" letter-spacing="1.2">CORE STACK</text>
+
+  <rect x="34" y="102" width="160" height="36" rx="11" fill="#121C35" stroke="#4D68D1"/>
+  <text x="114" y="125" text-anchor="middle" fill="#DCE6FF" font-family="Inter, Segoe UI, Arial" font-size="14" font-weight="600">Linux-First</text>
+
+  <rect x="206" y="102" width="104" height="36" rx="11" fill="#121C35" stroke="#4D68D1"/>
+  <text x="258" y="125" text-anchor="middle" fill="#DCE6FF" font-family="Inter, Segoe UI, Arial" font-size="14" font-weight="600">C++20</text>
+
+  <rect x="322" y="102" width="126" height="36" rx="11" fill="#121C35" stroke="#4D68D1"/>
+  <text x="385" y="125" text-anchor="middle" fill="#DCE6FF" font-family="Inter, Segoe UI, Arial" font-size="14" font-weight="600">LibTorch</text>
+
+  <rect x="460" y="102" width="114" height="36" rx="11" fill="#121C35" stroke="#4D68D1"/>
+  <text x="517" y="125" text-anchor="middle" fill="#DCE6FF" font-family="Inter, Segoe UI, Arial" font-size="14" font-weight="600">SQLite</text>
+
+  <text x="34" y="167" fill="#62B8CA" font-family="Inter, Segoe UI, Arial" font-size="11" font-weight="700" letter-spacing="1.2">RL &amp; CONTROL</text>
+
+  <rect x="34" y="177" width="246" height="36" rx="11" fill="#10242B" stroke="#2F9FA7"/>
+  <text x="157" y="200" text-anchor="middle" fill="#D6F7FF" font-family="Inter, Segoe UI, Arial" font-size="14" font-weight="600">Reinforcement Learning</text>
+
+  <rect x="292" y="177" width="158" height="36" rx="11" fill="#10242B" stroke="#2F9FA7"/>
+  <text x="371" y="200" text-anchor="middle" fill="#D6F7FF" font-family="Inter, Segoe UI, Arial" font-size="14" font-weight="600">PPO Baseline</text>
+
+  <rect x="462" y="177" width="182" height="36" rx="11" fill="#10242B" stroke="#2F9FA7"/>
+  <text x="553" y="200" text-anchor="middle" fill="#D6F7FF" font-family="Inter, Segoe UI, Arial" font-size="14" font-weight="600">Orbital Simulation</text>
+
+  <text x="34" y="242" fill="#B59AFD" font-family="Inter, Segoe UI, Arial" font-size="11" font-weight="700" letter-spacing="1.2">ENGINEERING + EXPERIENCE</text>
+
+  <rect x="34" y="252" width="174" height="36" rx="11" fill="#1A1930" stroke="#6F60C7"/>
+  <text x="121" y="275" text-anchor="middle" fill="#EFE9FF" font-family="Inter, Segoe UI, Arial" font-size="14" font-weight="600">UML Architecture</text>
+
+  <rect x="220" y="252" width="184" height="36" rx="11" fill="#1A1930" stroke="#6F60C7"/>
+  <text x="312" y="275" text-anchor="middle" fill="#EFE9FF" font-family="Inter, Segoe UI, Arial" font-size="14" font-weight="600">MLOps Mindset</text>
+
+  <rect x="416" y="252" width="190" height="36" rx="11" fill="#1A1930" stroke="#6F60C7"/>
+  <text x="511" y="275" text-anchor="middle" fill="#EFE9FF" font-family="Inter, Segoe UI, Arial" font-size="14" font-weight="600">Systems Engineering</text>
+
+  <rect x="618" y="252" width="196" height="36" rx="11" fill="#1A1930" stroke="#6F60C7"/>
+  <text x="716" y="275" text-anchor="middle" fill="#EFE9FF" font-family="Inter, Segoe UI, Arial" font-size="14" font-weight="600">Telemetry Tracking</text>
+
+  <rect x="826" y="252" width="214" height="36" rx="11" fill="#1A1930" stroke="#6F60C7"/>
+  <text x="933" y="275" text-anchor="middle" fill="#EFE9FF" font-family="Inter, Segoe UI, Arial" font-size="14" font-weight="600">Reproducible Benchmarks</text>
+
+  <rect x="652" y="177" width="190" height="36" rx="11" fill="#2B2316" stroke="#B9843B"/>
+  <text x="747" y="200" text-anchor="middle" fill="#FFEACF" font-family="Inter, Segoe UI, Arial" font-size="14" font-weight="600">Mission Replay UI</text>
+
+  <rect x="854" y="177" width="196" height="36" rx="11" fill="#2B2316" stroke="#B9843B"/>
+  <text x="952" y="200" text-anchor="middle" fill="#FFEACF" font-family="Inter, Segoe UI, Arial" font-size="14" font-weight="600">UX-Oriented Visualization</text>
+
+  <rect x="848" y="102" width="288" height="36" rx="11" fill="#2B2316" stroke="#B9843B"/>
+  <text x="992" y="125" text-anchor="middle" fill="#FFEACF" font-family="Inter, Segoe UI, Arial" font-size="14" font-weight="600">Structured Experiment Outputs</text>
+</svg>

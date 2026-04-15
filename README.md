@@ -10,24 +10,8 @@ CPU-first by design. LibTorch on CPU is the active inference/training backend. M
 
 ## Stack and Engineering Identity
 
-<p align="center"><strong>CORE STACK</strong></p>
 <p align="center">
-  <img src="assets/stack-core-chips.svg" alt="Core Stack chips: Linux-First, C++20, LibTorch, SQLite" width="100%" />
-</p>
-
-<p align="center"><strong>RL &amp; CONTROL</strong></p>
-<p align="center">
-  <img src="assets/rl-control-chips.svg" alt="RL and Control chips: Reinforcement Learning, PPO Baseline, Continuous Control, Orbital Simulation" width="100%" />
-</p>
-
-<p align="center"><strong>ENGINEERING DISCIPLINE</strong></p>
-<p align="center">
-  <img src="assets/engineering-chips.svg" alt="Engineering Discipline chips: UML Architecture, Systems Engineering, MLOps Mindset, Reproducible Benchmarks, Telemetry Tracking" width="100%" />
-</p>
-
-<p align="center"><strong>INTERFACE &amp; EXPERIENCE</strong></p>
-<p align="center">
-  <img src="assets/interface-chips.svg" alt="Interface and Experience chips: UX-Oriented Visualization, Mission Replay UI, CLI Tooling, Structured Experiment Outputs" width="100%" />
+  <img src="assets/stack-identity-compact.svg" alt="Compact stack and engineering identity chips with core stack, RL control, UML, UX, MLOps, telemetry, reproducibility, mission replay UI, and structured outputs." width="96%" />
 </p>
 
 <p align="center">
