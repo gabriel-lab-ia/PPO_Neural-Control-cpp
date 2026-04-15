@@ -127,16 +127,6 @@ h_t = f_\theta(s_t),
 V_\theta(s_t)=W_V h_t+b_V.
 $$
 
-Continuous action sampling uses a diagonal Gaussian:
-
-$$
-a_t \sim \mathcal{N}(\mu_\theta(s_t),\operatorname{diag}(\sigma_\theta^2)),
-\qquad
-\log\sigma_\theta\in[\log\sigma_{\min},\log\sigma_{\max}].
-$$
-
-In this codebase, policy parameters map to bounded control commands in \([-1,1]\) per axis, reducing actuator saturation shocks and keeping update dynamics smooth for continuous orbital control.
-
 ### GAE(\(\lambda\))
 
 Temporal-difference residual:
