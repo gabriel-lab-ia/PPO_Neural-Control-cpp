@@ -15,7 +15,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate baseline source set
+      - name: Validate baseline source contract
         run: |
           set -euxo pipefail
           required_sources=(
@@ -40,6 +40,23 @@ jobs:
           )
           for source_file in "${forbidden_legacy_sources[@]}"; do
             test ! -f "${source_file}"
+          done
+
+      - name: Validate documentation contract
+        run: |
+          set -euxo pipefail
+          docs_contract=(
+            "README.md"
+            "CONTRIBUTING.md"
+            "docs/build.md"
+            "docs/architecture.md"
+            "docs/roadmap.md"
+            "docs/uml/component-diagram.md"
+            "docs/uml/class-diagram.md"
+            "docs/uml/sequence-training.md"
+          )
+          for doc_file in "${docs_contract[@]}"; do
+            test -f "${doc_file}"
           done
 
       - name: Install system packages
@@ -77,12 +94,18 @@ jobs:
             -DNMC_BUILD_ORBITAL_BACKEND=OFF
           cmake -LA -N build-ci
 
-      - name: Build nmc
+      - name: Build baseline runtime (nmc)
         run: |
           set -euxo pipefail
           cmake --build --preset build-ci --verbose
           test -x build-ci/nmc
           file build-ci/nmc
+
+      - name: Validate nmc CLI contract
+        run: |
+          set -euxo pipefail
+          ./build-ci/nmc help > /tmp/nmc_help.txt
+          grep -q "Usage:" /tmp/nmc_help.txt
 
       - name: Run smoke benchmark test
         run: |

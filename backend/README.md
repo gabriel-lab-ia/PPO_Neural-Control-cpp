@@ -2,6 +2,8 @@
 
 Mission telemetry backend with REST + WebSocket endpoints.
 
+Status: optional module (not required for baseline `nmc` build/CI path).
+
 ## Endpoints
 
 - `GET /health`

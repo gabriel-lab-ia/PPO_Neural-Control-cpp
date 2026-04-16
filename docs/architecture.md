@@ -5,6 +5,7 @@ Orbital Neural Control CPP has one official runtime baseline and several optiona
 ## 1) Official Runtime Baseline (`src/`)
 
 The baseline executable is `nmc` and is built from `src/` only.
+This is the only runtime contract currently required to pass CI.
 
 Layering:
 
@@ -26,6 +27,8 @@ Layering:
 
 This is the path validated in CI and used as the reproducible CPU-first contract.
 
+Build options are intentionally prefixed with `NMC_*` to match the stable runtime contract name (`nmc`).
+
 ## 2) Expansion Modules (Optional)
 
 These modules are intentionally separated from the baseline runtime so they can evolve without destabilizing `nmc`.
@@ -38,6 +41,8 @@ These modules are intentionally separated from the baseline runtime so they can 
 - `mlops/`: MLflow tracking, ONNX export, model registration scripts.
 - `backend/`: C++ REST/WebSocket telemetry service.
 - `frontend/`: Next.js mission dashboard prototype.
+
+These modules are useful for integration and future productization, but they are not required to build or validate the baseline runtime.
 
 ## 3) Artifact and Persistence Contract
 

@@ -2,6 +2,8 @@
 
 This folder provides experiment tracking and model packaging workflows for the C++ PPO baseline.
 
+Status: optional module (baseline runtime does not require MLflow services).
+
 ## Features
 
 - MLflow run tracking (params, metrics, tags, artifacts)

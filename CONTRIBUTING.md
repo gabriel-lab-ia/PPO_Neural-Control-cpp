@@ -4,6 +4,11 @@ Thanks for contributing to **Orbital Neural Control CPP**.
 
 This repository is a C++20 RL systems baseline with an orbital-autonomy direction. Contributions should improve reliability, reproducibility, and maintainability.
 
+Baseline vs optional scope:
+
+- Baseline (required): `src/` + `nmc` (`train`, `eval`, `benchmark`)
+- Optional modules: `core`, `control`, `sim`, `rl`, `training`, `mlops`, `backend`, `frontend`
+
 ## Engineering Principles
 
 - Keep the CPU-first baseline (`nmc`) working.
@@ -33,6 +38,15 @@ Run at least these checks locally:
 ```bash
 ./build/nmc benchmark --quick --name pre_pr_smoke --seed 7
 ctest --test-dir build --output-on-failure --verbose -R nmc_smoke_benchmark
+```
+
+CI-equivalent local path:
+
+```bash
+cmake --preset ci
+cmake --build --preset build-ci --verbose
+./build-ci/nmc help
+ctest --test-dir build-ci --output-on-failure --verbose --no-tests=error -R nmc_smoke_benchmark
 ```
 
 If you touch orbital core modules:

@@ -138,6 +138,28 @@ This environment is a scaffold before higher-fidelity orbital simulation layers.
 | --- | --- | --- | --- |
 | point_mass | libtorch CPU | 30 | yes |
 
+## Frontend Mission Replay (MVP)
+
+The repository includes a React + TypeScript + Vite mission replay UI under `frontend/`.
+
+Current scope:
+
+- typed mock-data orbital replay (no live backend required)
+- 3D orbital viewport + telemetry sidebar + replay controls
+- run explorer page for replay dataset inspection
+
+Run locally:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Future integration path:
+
+- `VITE_BACKEND_HTTP` / `VITE_BACKEND_WS` for backend telemetry/runtime artifact wiring
+
 ## Architecture
 
 ### Baseline Runtime (Implemented Today)
@@ -163,7 +185,7 @@ Some modules provide scaffolding for future experiments:
 - `training/`: Python orchestration + pybind11 bridge
 - `mlops/`: MLflow tracking + ONNX export + registry scripts
 - `backend/`: C++ REST/WebSocket telemetry service
-- `frontend/`: Next.js mission dashboard prototype
+- `frontend/`: React + Vite mission replay UI foundation
 
 ### Future Tracks (Roadmap)
 

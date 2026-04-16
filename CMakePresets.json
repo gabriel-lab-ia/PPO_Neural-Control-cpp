@@ -8,11 +8,13 @@
   "configurePresets": [
     {
       "name": "dev",
-      "displayName": "Dev RelWithDebInfo",
+      "displayName": "Baseline Dev (nmc)",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "NMC_EIGEN_ROOT": "${sourceDir}/lib/eigen-source",
+        "NMC_TORCH_ROOT": "${sourceDir}/lib/libtorch",
         "NMC_ENABLE_WARNINGS": "ON",
         "NMC_ENABLE_ASAN": "OFF",
         "NMC_ENABLE_UBSAN": "OFF",
@@ -22,7 +24,7 @@
     },
     {
       "name": "debug-sanitized",
-      "displayName": "Debug with Sanitizers",
+      "displayName": "Baseline Debug + Sanitizers",
       "inherits": "dev",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
@@ -32,7 +34,7 @@
     },
     {
       "name": "orbital-stack",
-      "displayName": "Orbital Stack (Core + Backend)",
+      "displayName": "Orbital Optional Stack (Core + Backend)",
       "inherits": "dev",
       "binaryDir": "${sourceDir}/build-orbital",
       "cacheVariables": {
@@ -42,7 +44,7 @@
     },
     {
       "name": "orbital-core-only",
-      "displayName": "Orbital Core Only",
+      "displayName": "Orbital Core Optional Targets",
       "inherits": "dev",
       "binaryDir": "${sourceDir}/build-orbital-core",
       "cacheVariables": {
@@ -52,7 +54,7 @@
     },
     {
       "name": "ci",
-      "displayName": "CI Baseline",
+      "displayName": "CI Baseline (nmc)",
       "inherits": "dev",
       "binaryDir": "${sourceDir}/build-ci",
       "cacheVariables": {

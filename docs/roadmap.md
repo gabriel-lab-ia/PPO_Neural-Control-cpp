@@ -9,6 +9,7 @@
 - Optional MuJoCo adapter path, disabled by default.
 - Inference backend abstraction with active LibTorch backend and TensorRT stub.
 - CI baseline with configure/build/smoke benchmark/artifact checks.
+- Optional integration modules for telemetry/backend/frontend and MLOps workflows.
 
 ## Next 30 Days
 

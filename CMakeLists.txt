@@ -2,11 +2,14 @@ cmake_minimum_required(VERSION 3.24)
 
 project(
     OrbitalNeuralControlCPP
-    VERSION 0.3.0
-    DESCRIPTION "CPU-first C++20 orbital PPO systems baseline with reproducible experiments"
+    VERSION 0.3.1
+    DESCRIPTION "CPU-first C++20 orbital PPO baseline with reproducible train/eval/benchmark workflows"
     LANGUAGES CXX
 )
 
+# -----------------------------------------------------------------------------
+# Global language/tooling defaults
+# -----------------------------------------------------------------------------
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -16,14 +19,21 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
 endif()
 
+# -----------------------------------------------------------------------------
+# Build options
+# NMC_* prefix intentionally follows the stable runtime target name: nmc.
+# -----------------------------------------------------------------------------
 option(NMC_ENABLE_WARNINGS "Enable stricter compiler warnings" ON)
 option(NMC_ENABLE_ASAN "Enable AddressSanitizer in Debug builds" OFF)
 option(NMC_ENABLE_UBSAN "Enable UndefinedBehaviorSanitizer in Debug builds" OFF)
 option(NMC_ENABLE_LTO "Enable link-time optimization in Release-like builds" OFF)
 option(NMC_ENABLE_MUJOCO "Enable MuJoCo environment support" OFF)
-option(NMC_BUILD_ORBITAL_CORE "Build orbital core/control/sim baseline library and tests" ON)
+option(NMC_BUILD_ORBITAL_CORE "Build orbital core/control/sim library + tests" ON)
 option(NMC_BUILD_ORBITAL_BACKEND "Build orbital backend WebSocket/REST service" OFF)
 
+# -----------------------------------------------------------------------------
+# Dependency roots (cache + env override)
+# -----------------------------------------------------------------------------
 set(NMC_EIGEN_DEFAULT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/lib/eigen-source")
 set(NMC_TORCH_DEFAULT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/lib/libtorch")
 
@@ -31,32 +41,39 @@ set(NMC_EIGEN_ROOT "${NMC_EIGEN_DEFAULT_ROOT}" CACHE PATH "Path to Eigen root")
 set(NMC_TORCH_ROOT "${NMC_TORCH_DEFAULT_ROOT}" CACHE PATH "Path to LibTorch root")
 set(NMC_MUJOCO_ROOT "" CACHE PATH "Optional MuJoCo installation root")
 
-if(
-    DEFINED ENV{NMC_EIGEN_ROOT}
-    AND NMC_EIGEN_ROOT STREQUAL NMC_EIGEN_DEFAULT_ROOT
-    AND EXISTS "$ENV{NMC_EIGEN_ROOT}/Eigen/Dense"
-)
-    set(NMC_EIGEN_ROOT "$ENV{NMC_EIGEN_ROOT}" CACHE PATH "Path to Eigen root" FORCE)
-endif()
+function(nmc_override_root_from_env cache_var default_value env_var probe_relative)
+    if(
+        DEFINED ENV{${env_var}}
+        AND "${${cache_var}}" STREQUAL "${default_value}"
+        AND EXISTS "$ENV{${env_var}}/${probe_relative}"
+    )
+        set(${cache_var} "$ENV{${env_var}}" CACHE PATH "Path to ${cache_var}" FORCE)
+    endif()
+endfunction()
 
-if(
-    DEFINED ENV{NMC_TORCH_ROOT}
-    AND NMC_TORCH_ROOT STREQUAL NMC_TORCH_DEFAULT_ROOT
-    AND EXISTS "$ENV{NMC_TORCH_ROOT}/share/cmake/Torch/TorchConfig.cmake"
-)
-    set(NMC_TORCH_ROOT "$ENV{NMC_TORCH_ROOT}" CACHE PATH "Path to LibTorch root" FORCE)
-endif()
+nmc_override_root_from_env(NMC_EIGEN_ROOT "${NMC_EIGEN_DEFAULT_ROOT}" NMC_EIGEN_ROOT "Eigen/Dense")
+nmc_override_root_from_env(NMC_TORCH_ROOT "${NMC_TORCH_DEFAULT_ROOT}" NMC_TORCH_ROOT "share/cmake/Torch/TorchConfig.cmake")
 
 if(NOT EXISTS "${NMC_EIGEN_ROOT}/Eigen/Dense")
-    message(FATAL_ERROR "Eigen not found at ${NMC_EIGEN_ROOT}.")
+    message(FATAL_ERROR "Eigen not found at ${NMC_EIGEN_ROOT}")
 endif()
 
 if(NOT EXISTS "${NMC_TORCH_ROOT}/share/cmake/Torch/TorchConfig.cmake")
-    message(FATAL_ERROR "LibTorch not found at ${NMC_TORCH_ROOT}.")
+    message(FATAL_ERROR "LibTorch not found at ${NMC_TORCH_ROOT}")
+endif()
+
+set(NMC_EXPECTED_TORCH_DIR "${NMC_TORCH_ROOT}/share/cmake/Torch")
+if(
+    DEFINED Torch_DIR
+    AND NOT "${Torch_DIR}" STREQUAL "${NMC_EXPECTED_TORCH_DIR}"
+    AND EXISTS "${NMC_EXPECTED_TORCH_DIR}/TorchConfig.cmake"
+)
+    message(STATUS "Resetting cached Torch_DIR to match NMC_TORCH_ROOT")
+    set(Torch_DIR "${NMC_EXPECTED_TORCH_DIR}" CACHE PATH "Torch package configuration directory" FORCE)
 endif()
 
 list(PREPEND CMAKE_PREFIX_PATH "${NMC_TORCH_ROOT}")
-find_package(Torch REQUIRED)
+find_package(Torch REQUIRED CONFIG)
 
 find_library(
     NMC_SQLITE3_LIBRARY
@@ -64,10 +81,76 @@ find_library(
     HINTS /usr/lib /usr/lib/x86_64-linux-gnu /lib /lib/x86_64-linux-gnu
 )
 if(NOT NMC_SQLITE3_LIBRARY)
-    message(FATAL_ERROR "SQLite3 runtime library not found.")
+    message(FATAL_ERROR "SQLite3 runtime library not found")
 endif()
 
-message(STATUS "NMC build configuration")
+# -----------------------------------------------------------------------------
+# Compiler/linker profile helpers
+# -----------------------------------------------------------------------------
+function(nmc_apply_warning_profile target)
+    if(NMC_ENABLE_WARNINGS)
+        if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+            target_compile_options(
+                ${target} PRIVATE
+                -Wall
+                -Wextra
+                -Wpedantic
+                -Wconversion
+                -Wsign-conversion
+                -Wshadow
+                -Wnon-virtual-dtor
+                -Wold-style-cast
+                -Wnull-dereference
+                -Wdouble-promotion
+                -Wformat=2
+            )
+        elseif(MSVC)
+            target_compile_options(${target} PRIVATE /W4 /permissive-)
+        endif()
+    endif()
+endfunction()
+
+function(nmc_apply_security_profile target)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_definitions(${target} PRIVATE _FORTIFY_SOURCE=3)
+        target_compile_options(
+            ${target} PRIVATE
+            $<$<CONFIG:Debug>:-fno-omit-frame-pointer>
+            $<$<NOT:$<CONFIG:Debug>>:-fstack-protector-strong>
+        )
+        target_link_options(
+            ${target} PRIVATE
+            $<$<PLATFORM_ID:Linux>:-Wl,-z,relro,-z,now>
+        )
+    endif()
+endfunction()
+
+function(nmc_apply_sanitizers target)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        if(NMC_ENABLE_ASAN)
+            target_compile_options(${target} PRIVATE $<$<CONFIG:Debug>:-fsanitize=address>)
+            target_link_options(${target} PRIVATE $<$<CONFIG:Debug>:-fsanitize=address>)
+        endif()
+        if(NMC_ENABLE_UBSAN)
+            target_compile_options(${target} PRIVATE $<$<CONFIG:Debug>:-fsanitize=undefined>)
+            target_link_options(${target} PRIVATE $<$<CONFIG:Debug>:-fsanitize=undefined>)
+        endif()
+    endif()
+endfunction()
+
+function(nmc_try_enable_lto target)
+    if(NMC_ENABLE_LTO)
+        include(CheckIPOSupported)
+        check_ipo_supported(RESULT nmc_ipo_supported OUTPUT nmc_ipo_error)
+        if(nmc_ipo_supported)
+            set_property(TARGET ${target} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+        else()
+            message(WARNING "IPO/LTO unavailable: ${nmc_ipo_error}")
+        endif()
+    endif()
+endfunction()
+
+message(STATUS "Orbital Neural Control CPP build configuration")
 message(STATUS "  CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 message(STATUS "  NMC_TORCH_ROOT: ${NMC_TORCH_ROOT}")
 message(STATUS "  NMC_EIGEN_ROOT: ${NMC_EIGEN_ROOT}")
@@ -77,7 +160,10 @@ message(STATUS "  NMC_BUILD_ORBITAL_BACKEND: ${NMC_BUILD_ORBITAL_BACKEND}")
 message(STATUS "  SQLite library: ${NMC_SQLITE3_LIBRARY}")
 message(STATUS "  Primary CLI target: nmc")
 
-set(NMC_SOURCES
+# -----------------------------------------------------------------------------
+# Baseline runtime target: nmc
+# -----------------------------------------------------------------------------
+set(NMC_BASELINE_SOURCES
     src/common/json_utils.cpp
     src/common/time_utils.cpp
     src/domain/config/experiment_config.cpp
@@ -126,23 +212,27 @@ if(NMC_ENABLE_MUJOCO)
         message(FATAL_ERROR "MuJoCo requested but not found. Set NMC_MUJOCO_ROOT or MUJOCO_ROOT.")
     endif()
 
-    list(APPEND NMC_SOURCES src/domain/env/mujoco_cartpole_env.cpp)
+    list(APPEND NMC_BASELINE_SOURCES src/domain/env/mujoco_cartpole_env.cpp)
 endif()
 
-add_executable(nmc ${NMC_SOURCES})
+add_executable(nmc)
+target_sources(nmc PRIVATE ${NMC_BASELINE_SOURCES})
 target_compile_features(nmc PRIVATE cxx_std_20)
+
 target_include_directories(
     nmc SYSTEM PRIVATE
     "${NMC_EIGEN_ROOT}"
     "${TORCH_INCLUDE_DIRS}"
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
+
 target_link_libraries(nmc PRIVATE "${TORCH_LIBRARIES}" "${NMC_SQLITE3_LIBRARY}")
 
 if(NMC_ENABLE_MUJOCO)
     target_include_directories(nmc SYSTEM PRIVATE "${MUJOCO_INCLUDE_DIR}")
     target_link_libraries(nmc PRIVATE "${MUJOCO_LIBRARY}")
     target_compile_definitions(nmc PRIVATE NMC_ENABLE_MUJOCO=1)
+
     get_filename_component(MUJOCO_LIBRARY_DIR "${MUJOCO_LIBRARY}" DIRECTORY)
     set_target_properties(
         nmc
@@ -164,60 +254,14 @@ if(TORCH_CXX_FLAGS)
     target_compile_options(nmc PRIVATE ${TORCH_CXX_FLAGS_LIST})
 endif()
 
-if(NMC_ENABLE_WARNINGS)
-    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-        target_compile_options(
-            nmc PRIVATE
-            -Wall
-            -Wextra
-            -Wpedantic
-            -Wconversion
-            -Wsign-conversion
-            -Wshadow
-            -Wnon-virtual-dtor
-            -Wold-style-cast
-            -Wnull-dereference
-            -Wdouble-promotion
-            -Wformat=2
-        )
-    elseif(MSVC)
-        target_compile_options(nmc PRIVATE /W4 /permissive-)
-    endif()
-endif()
+nmc_apply_warning_profile(nmc)
+nmc_apply_security_profile(nmc)
+nmc_apply_sanitizers(nmc)
+nmc_try_enable_lto(nmc)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_definitions(nmc PRIVATE _FORTIFY_SOURCE=3)
-    target_compile_options(
-        nmc PRIVATE
-        $<$<CONFIG:Debug>:-fno-omit-frame-pointer>
-        $<$<NOT:$<CONFIG:Debug>>:-fstack-protector-strong>
-    )
-    target_link_options(
-        nmc PRIVATE
-        $<$<PLATFORM_ID:Linux>:-Wl,-z,relro,-z,now>
-    )
-endif()
-
-if(NMC_ENABLE_ASAN AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(nmc PRIVATE $<$<CONFIG:Debug>:-fsanitize=address>)
-    target_link_options(nmc PRIVATE $<$<CONFIG:Debug>:-fsanitize=address>)
-endif()
-
-if(NMC_ENABLE_UBSAN AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(nmc PRIVATE $<$<CONFIG:Debug>:-fsanitize=undefined>)
-    target_link_options(nmc PRIVATE $<$<CONFIG:Debug>:-fsanitize=undefined>)
-endif()
-
-if(NMC_ENABLE_LTO)
-    include(CheckIPOSupported)
-    check_ipo_supported(RESULT nmc_ipo_supported OUTPUT nmc_ipo_error)
-    if(nmc_ipo_supported)
-        set_property(TARGET nmc PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-    else()
-        message(WARNING "IPO/LTO unavailable: ${nmc_ipo_error}")
-    endif()
-endif()
-
+# -----------------------------------------------------------------------------
+# Baseline smoke test contract
+# -----------------------------------------------------------------------------
 enable_testing()
 add_test(
     NAME nmc_smoke_benchmark
@@ -230,6 +274,9 @@ set_tests_properties(
     TIMEOUT 240
 )
 
+# -----------------------------------------------------------------------------
+# Optional expansion modules
+# -----------------------------------------------------------------------------
 if(NMC_BUILD_ORBITAL_CORE)
     add_subdirectory(core)
 endif()

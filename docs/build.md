@@ -19,8 +19,10 @@ bash tools/setup_libtorch_cpu.sh
 ## Baseline Configure and Build
 
 ```bash
+cd <repo-root>
 cmake --preset dev
 cmake --build --preset build
+./build/nmc help
 ```
 
 Binary:
@@ -32,8 +34,10 @@ Binary:
 ## CI-Equivalent Local Flow
 
 ```bash
+cd <repo-root>
 cmake --preset ci
 cmake --build --preset build-ci
+./build-ci/nmc help
 ctest --test-dir build-ci --output-on-failure --verbose -R nmc_smoke_benchmark
 ```
 
@@ -93,3 +97,5 @@ Benchmark:
 - `NMC_BUILD_ORBITAL_CORE=ON`: build orbital core library/tests/benchmarks
 
 TensorRT remains a stub path and is intentionally disabled in the baseline.
+
+The `backend/`, `frontend/`, and `mlops/` folders are optional integration tracks and are not required for baseline runtime validation.

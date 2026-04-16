@@ -4,18 +4,71 @@
 
 :root {
   color-scheme: dark;
+  --mission-bg: #020611;
+  --mission-bg-soft: #071223;
+  --mission-panel: #0c1729;
+  --mission-panel-border: rgba(70, 93, 122, 0.6);
+  --mission-text: #e6eef9;
+  --mission-text-muted: #94a5be;
+  --mission-accent: #4ac7ff;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 html,
 body {
   margin: 0;
-  padding: 0;
   min-height: 100%;
-  background: hsl(220 30% 8%);
-  color: hsl(210 40% 96%);
-  font-family: "IBM Plex Sans", "Space Grotesk", "Segoe UI", sans-serif;
+  background: radial-gradient(circle at 8% -10%, #10233d 0%, transparent 48%),
+    radial-gradient(circle at 92% 8%, #0a1a2f 0%, transparent 38%),
+    linear-gradient(180deg, #020611 0%, #040a15 100%);
+  color: var(--mission-text);
+  font-family: "Inter", "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
 }
 
-* {
-  box-sizing: border-box;
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.mission-shell {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.mission-shell__gradient {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 22% 12%, rgba(56, 189, 248, 0.12) 0%, transparent 30%),
+    radial-gradient(circle at 86% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 28%),
+    linear-gradient(180deg, rgba(2, 10, 23, 0.3), rgba(2, 6, 16, 0.7));
+}
+
+.mission-shell__content {
+  position: relative;
+  z-index: 1;
+  margin: 0 auto;
+  width: min(1440px, 100%);
+  padding: 2rem 1.1rem 1.2rem;
+}
+
+@media (min-width: 640px) {
+  .mission-shell__content {
+    padding: 2.2rem 1.8rem 1.4rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .mission-shell__content {
+    padding: 2.4rem 2.1rem 1.6rem;
+  }
+}
+
+input[type="range"] {
+  accent-color: var(--mission-accent);
 }

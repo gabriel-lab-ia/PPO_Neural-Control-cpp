@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.3.1 - Build + Documentation Harmonization
+
+- Refactored top-level `CMakeLists.txt` into clearer engineering blocks (toolchain defaults, dependency roots, compile profiles, baseline target, optional modules).
+- Kept `nmc` as the explicit runtime contract and aligned CMake status messaging with Orbital Neural Control CPP naming.
+- Improved CI clarity with source/docs contract checks and explicit CLI contract validation (`nmc help`) before smoke benchmark.
+- Rewrote README math section for cleaner GitHub rendering and better PPO/GAE notation readability.
+- Tightened README/CONTRIBUTING/docs wording to explicitly separate baseline runtime, optional modules, and roadmap scope.
+
 ## 0.3.0 - Architecture Consolidation
 
 - Promoted a single official runtime path around `nmc` (`train`, `eval`, `benchmark`).
