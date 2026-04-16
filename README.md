@@ -2,99 +2,6 @@
   <img src="docs/assets/orbital-hero-banner.svg" alt="Orbital Neural Control CPP hero" width="100%" />
 </p>
 
-## Running the full stack with Docker Compose
-
-From the repository root directory, run:
-
-```bash
-cd Orbital-Neural-Control-CPP
-docker compose up --build -d mlflow backend frontend
-docker compose run --rm training
-docker compose logs -f backend frontend
-# Orbital Neural Control CPP
-
-**C++20 autonomy engineering baseline for PPO-based continuous control, reproducible experiments, telemetry persistence, and benchmarkable evaluation.**
-
-`nmc` is the primary CLI binary (`train`, `eval`, `benchmark`). The project is CPU-first by default.
-
-- Active backend: LibTorch (CPU)
-- Optional integration: MuJoCo (`NMC_ENABLE_MUJOCO=ON`)
-- Future path (stub only): TensorRT inference backend
-
-Execution scope:
-
-- baseline (implemented + CI-gated): `src/` runtime and `nmc`
-- expansion modules (implemented, optional): `core`, `control`, `sim`, `rl`, `training`, `mlops`, `backend`, `frontend`
-- roadmap (not shipped as baseline): higher-fidelity orbital dynamics and advanced autonomy stacks
-
-## Stack and Engineering Identity
-
-<p align="center">
-  <span style="display:inline-flex; margin:8px 10px;"><img alt="Linux First" src="https://img.shields.io/badge/Linux-First-2563EB?style=for-the-badge&amp;labelColor=333333&amp;color=2563EB" /></span>
-  <span style="display:inline-flex; margin:8px 10px;"><img alt="C++ 20" src="https://img.shields.io/badge/C%2B%2B-20-2563EB?style=for-the-badge&amp;labelColor=333333&amp;color=2563EB" /></span>
-  <span style="display:inline-flex; margin:8px 10px;"><img alt="Reinforcement Learning PPO" src="https://img.shields.io/badge/Reinforcement%20Learning-PPO-2563EB?style=for-the-badge&amp;labelColor=333333&amp;color=2563EB" /></span>
-</p>
-
-<p align="center">
-  <span style="display:inline-flex; margin:8px 10px;"><img alt="Backend LibTorch CPU" src="https://img.shields.io/badge/Backend-LibTorch%20CPU-1F9D68?style=for-the-badge&amp;labelColor=333333&amp;color=1F9D68" /></span>
-  <span style="display:inline-flex; margin:8px 10px;"><img alt="Tracking SQLite" src="https://img.shields.io/badge/Tracking-SQLite-0EA5B7?style=for-the-badge&amp;labelColor=333333&amp;color=0EA5B7" /></span>
-</p>
-
-<p align="center">
-  <span style="display:inline-flex; margin:8px 10px;"><img alt="Simulation Orbital Mission Direction" src="https://img.shields.io/badge/Simulation-Orbital%20Mission%20Direction-2563EB?style=for-the-badge&amp;labelColor=333333&amp;color=2563EB" /></span>
-</p>
-
-<p align="center">
-  <span style="display:inline-flex; margin:8px 10px;"><img alt="Telemetry Run Episode Event" src="https://img.shields.io/badge/Telemetry-Run%2FEpisode%2FEvent-2563EB?style=for-the-badge&amp;labelColor=333333&amp;color=2563EB" /></span>
-  <span style="display:inline-flex; margin:8px 10px;"><img alt="Benchmarking Reproducible" src="https://img.shields.io/badge/Benchmarking-Reproducible-1F9D68?style=for-the-badge&amp;labelColor=333333&amp;color=1F9D68" /></span>
-</p>
-
-<p align="center">
-  <span style="display:inline-flex; margin:8px 10px;"><img alt="UML Architecture Discipline" src="https://img.shields.io/badge/UML-Architecture%20Discipline-6D28D9?style=for-the-badge&amp;labelColor=333333&amp;color=6D28D9" /></span>
-  <span style="display:inline-flex; margin:8px 10px;"><img alt="Systems Engineering" src="https://img.shields.io/badge/Systems-Engineering-2563EB?style=for-the-badge&amp;labelColor=333333&amp;color=2563EB" /></span>
-</p>
-
-<p align="center">
-  <span style="display:inline-flex; margin:8px 10px;"><img alt="CI Smoke Benchmark" src="https://img.shields.io/badge/CI-Smoke%20Benchmark-1F9D68?style=for-the-badge&amp;labelColor=333333&amp;color=1F9D68" /></span>
-  <span style="display:inline-flex; margin:8px 10px;"><img alt="Baseline CPU Only" src="https://img.shields.io/badge/Baseline-CPU%20Only-9CA3AF?style=for-the-badge&amp;labelColor=333333&amp;color=9CA3AF" /></span>
-</p>
-
-<p align="center">
-  <span style="display:inline-flex; margin:8px 10px;"><img alt="Optional MuJoCo" src="https://img.shields.io/badge/Optional-MuJoCo-C97316?style=for-the-badge&amp;labelColor=333333&amp;color=C97316" /></span>
-  <span style="display:inline-flex; margin:8px 10px;"><img alt="Future TensorRT Path" src="https://img.shields.io/badge/Future-TensorRT%20Path-D4A017?style=for-the-badge&amp;labelColor=333333&amp;color=D4A017" /></span>
-</p>
-
-## Core Capabilities
-
-<p align="center">
-  <img src="docs/assets/mission-capabilities-strip.svg" alt="Core capabilities chart" width="100%" />
-</p>
-
-## Why This Repository Exists
-
-Most RL repositories optimize for short-lived experiments. This repository optimizes for maintainable autonomy engineering
-
-Current baseline environments use low-dimensional continuous-control dynamics.
-Orbital dynamics integration is an explicit research direction rather than a fully implemented simulation layer at this stage.
-
-- layered C++ architecture with explicit boundaries
-- reproducible train/eval/benchmark workflows
-- deterministic smoke path for CI validation
-- structured artifacts + SQLite persistence
-- forward-compatible modules for orbital mission systems
-
-## Quickstart
-
-### 1. Bootstrap dependencies and build
-
-```bash
-cd <repo-root>
-bash tools/setup_libtorch_cpu.sh
-cmake --preset dev
-cmake --build --preset build
-./build/nmc help
-```
-
 ### 2. Run smoke benchmark (CI-equivalent baseline)
 
 ```bash
@@ -348,6 +255,74 @@ python3 -m pip install -r mlops/requirements.txt
 ./mlops/start_mlflow.sh
 python3 mlops/train_with_mlflow.py --tracking-uri http://localhost:5000 --experiment orbital_ppo --run-id mlflow_orbital_001 --seed 7 --updates 30 --num-envs 16 --env point_mass --export-onnx
 ```
+
+## Running the full stack with Docker Compose
+From the repository root directory, run:
+
+```bash
+cd Orbital-Neural-Control-CPP
+docker compose up --build -d mlflow backend frontend
+docker compose run --rm training
+docker compose logs -f backend frontend
+# Orbital Neural Control CPP
+
+**C++20 autonomy engineering baseline for PPO-based continuous control, reproducible experiments, telemetry persistence, and benchmarkable evaluation.**
+
+`nmc` is the primary CLI binary (`train`, `eval`, `benchmark`). The project is CPU-first by default.
+
+- Active backend: LibTorch (CPU)
+- Optional integration: MuJoCo (`NMC_ENABLE_MUJOCO=ON`)
+- Future path (stub only): TensorRT inference backend
+
+Execution scope:
+
+- baseline (implemented + CI-gated): `src/` runtime and `nmc`
+- expansion modules (implemented, optional): `core`, `control`, `sim`, `rl`, `training`, `mlops`, `backend`, `frontend`
+- roadmap (not shipped as baseline): higher-fidelity orbital dynamics and advanced autonomy stacks
+
+## Stack and Engineering Identity
+
+<p align="center">
+  <span style="display:inline-flex; margin:8px 10px;"><img alt="Linux First" src="https://img.shields.io/badge/Linux-First-2563EB?style=for-the-badge&amp;labelColor=333333&amp;color=2563EB" /></span>
+  <span style="display:inline-flex; margin:8px 10px;"><img alt="C++ 20" src="https://img.shields.io/badge/C%2B%2B-20-2563EB?style=for-the-badge&amp;labelColor=333333&amp;color=2563EB" /></span>
+  <span style="display:inline-flex; margin:8px 10px;"><img alt="Reinforcement Learning PPO" src="https://img.shields.io/badge/Reinforcement%20Learning-PPO-2563EB?style=for-the-badge&amp;labelColor=333333&amp;color=2563EB" /></span>
+</p>
+
+<p align="center">
+  <span style="display:inline-flex; margin:8px 10px;"><img alt="Backend LibTorch CPU" src="https://img.shields.io/badge/Backend-LibTorch%20CPU-1F9D68?style=for-the-badge&amp;labelColor=333333&amp;color=1F9D68" /></span>
+  <span style="display:inline-flex; margin:8px 10px;"><img alt="Tracking SQLite" src="https://img.shields.io/badge/Tracking-SQLite-0EA5B7?style=for-the-badge&amp;labelColor=333333&amp;color=0EA5B7" /></span>
+</p>
+
+<p align="center">
+  <span style="display:inline-flex; margin:8px 10px;"><img alt="Simulation Orbital Mission Direction" src="https://img.shields.io/badge/Simulation-Orbital%20Mission%20Direction-2563EB?style=for-the-badge&amp;labelColor=333333&amp;color=2563EB" /></span>
+</p>
+
+<p align="center">
+  <span style="display:inline-flex; margin:8px 10px;"><img alt="Telemetry Run Episode Event" src="https://img.shields.io/badge/Telemetry-Run%2FEpisode%2FEvent-2563EB?style=for-the-badge&amp;labelColor=333333&amp;color=2563EB" /></span>
+  <span style="display:inline-flex; margin:8px 10px;"><img alt="Benchmarking Reproducible" src="https://img.shields.io/badge/Benchmarking-Reproducible-1F9D68?style=for-the-badge&amp;labelColor=333333&amp;color=1F9D68" /></span>
+</p>
+
+<p align="center">
+  <span style="display:inline-flex; margin:8px 10px;"><img alt="UML Architecture Discipline" src="https://img.shields.io/badge/UML-Architecture%20Discipline-6D28D9?style=for-the-badge&amp;labelColor=333333&amp;color=6D28D9" /></span>
+  <span style="display:inline-flex; margin:8px 10px;"><img alt="Systems Engineering" src="https://img.shields.io/badge/Systems-Engineering-2563EB?style=for-the-badge&amp;labelColor=333333&amp;color=2563EB" /></span>
+</p>
+
+<p align="center">
+  <span style="display:inline-flex; margin:8px 10px;"><img alt="CI Smoke Benchmark" src="https://img.shields.io/badge/CI-Smoke%20Benchmark-1F9D68?style=for-the-badge&amp;labelColor=333333&amp;color=1F9D68" /></span>
+  <span style="display:inline-flex; margin:8px 10px;"><img alt="Baseline CPU Only" src="https://img.shields.io/badge/Baseline-CPU%20Only-9CA3AF?style=for-the-badge&amp;labelColor=333333&amp;color=9CA3AF" /></span>
+</p>
+
+<p align="center">
+  <span style="display:inline-flex; margin:8px 10px;"><img alt="Optional MuJoCo" src="https://img.shields.io/badge/Optional-MuJoCo-C97316?style=for-the-badge&amp;labelColor=333333&amp;color=C97316" /></span>
+  <span style="display:inline-flex; margin:8px 10px;"><img alt="Future TensorRT Path" src="https://img.shields.io/badge/Future-TensorRT%20Path-D4A017?style=for-the-badge&amp;labelColor=333333&amp;color=D4A017" /></span>
+</p>
+
+## Core Capabilities
+
+<p align="center">
+  <img src="docs/assets/mission-capabilities-strip.svg" alt="Core capabilities chart" width="100%" />
+</p>
+
 
 ## Frontend Mission Control Interface
 
