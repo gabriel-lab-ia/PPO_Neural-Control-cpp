@@ -1,0 +1,18 @@
+# Vendored / third-party code
+lib/eigen-source/** linguist-vendored
+
+# Build and generated outputs
+build/** linguist-generated
+build-ci/** linguist-generated
+build-orbital/** linguist-generated
+build-orbital-core/** linguist-generated
+artifacts/** linguist-generated
+
+# Docs and assets that should not affect language stats
+docs/assets/** linguist-generated
+assets/** linguist-generated
+
+# Node lockfiles and generated frontend artifacts
+frontend/package-lock.json linguist-generated
+frontend/.next/** linguist-generated
+frontend/dist/** linguist-generated
