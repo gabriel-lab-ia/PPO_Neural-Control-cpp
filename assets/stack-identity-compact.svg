@@ -1,106 +1,176 @@
-<svg width="1600" height="276" viewBox="0 0 1600 276" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">Stack and Engineering Identity Pills</title>
-  <desc id="desc">Linux First, C++ 20, Reinforcement Learning, PPO, Backend LibTorch CPU, Tracking SQLite, Simulation, Orbital Mission Direction, Telemetry, Run/Episode/Event, Benchmarking, Reproducible, UML, Architecture Discipline, Systems Engineering, CI failing, CI Smoke Benchmark, Optional MuJoCo, Future TensorRT Path.</desc>
+<svg width="1600" height="470" viewBox="0 0 1600 470" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Stack and Engineering Identity Key Value Tags</title>
+  <desc id="desc">Linux First, C++ 20, Reinforcement Learning PPO, Backend LibTorch CPU, Tracking SQLite, Simulation Orbital Mission Direction, Telemetry Run Episode Event, Benchmarking Reproducible, UML Architecture Discipline, Systems Engineering, CI failing, CI Smoke Benchmark, Optional MuJoCo, Future TensorRT Path, Baseline CPU Only.</desc>
   <defs>
-    <linearGradient id="panelBg" x1="80" y1="18" x2="1520" y2="258" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#090F19"/>
-      <stop offset="1" stop-color="#0D1320"/>
-    </linearGradient>
-    <filter id="softShadow" x="-20%" y="-40%" width="140%" height="180%" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000000" flood-opacity="0.28"/>
-    </filter>
+    <style>
+      .label {
+        font-family: "Inter", "Segoe UI", Arial, sans-serif;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.1px;
+        dominant-baseline: middle;
+      }
+      .key {
+        fill: #E9EEF7;
+      }
+      .value {
+        fill: #F8FBFF;
+      }
+    </style>
 
-    <linearGradient id="gBlue" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#1E3A8A"/>
-      <stop offset="1" stop-color="#2563EB"/>
+    <linearGradient id="vBlue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2B4BCB"/>
+      <stop offset="1" stop-color="#215ED8"/>
     </linearGradient>
-    <linearGradient id="gIndigo" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#312E81"/>
-      <stop offset="1" stop-color="#4F46E5"/>
+    <linearGradient id="vGreen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1D7F52"/>
+      <stop offset="1" stop-color="#269864"/>
     </linearGradient>
-    <linearGradient id="gCyan" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#0F4C5C"/>
-      <stop offset="1" stop-color="#0891B2"/>
+    <linearGradient id="vCyan" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#157B90"/>
+      <stop offset="1" stop-color="#1098B2"/>
     </linearGradient>
-    <linearGradient id="gTeal" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#115E59"/>
-      <stop offset="1" stop-color="#14B8A6"/>
+    <linearGradient id="vPurple" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#422676"/>
+      <stop offset="1" stop-color="#53338D"/>
     </linearGradient>
-    <linearGradient id="gPurple" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#4C1D95"/>
-      <stop offset="1" stop-color="#7C3AED"/>
+    <linearGradient id="vRed" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9F2A2A"/>
+      <stop offset="1" stop-color="#BF2A2A"/>
     </linearGradient>
-    <linearGradient id="gAmber" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#78350F"/>
-      <stop offset="1" stop-color="#D97706"/>
+    <linearGradient id="vOrangeDark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#975820"/>
+      <stop offset="1" stop-color="#B56A25"/>
     </linearGradient>
-    <linearGradient id="gRed" x1="0" y1="0" x2="1" y2="1">
-      <stop stop-color="#7F1D1D"/>
-      <stop offset="1" stop-color="#DC2626"/>
+    <linearGradient id="vOrangeLight" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#BF7A2F"/>
+      <stop offset="1" stop-color="#D18A34"/>
     </linearGradient>
+    <linearGradient id="vGrayLight" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#818B99"/>
+      <stop offset="1" stop-color="#909BAA"/>
+    </linearGradient>
+
+    <filter id="tagShadow" x="-20%" y="-60%" width="140%" height="220%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.22"/>
+    </filter>
   </defs>
 
-  <rect x="10" y="10" width="1580" height="256" rx="18" fill="url(#panelBg)" stroke="#2A3850" stroke-width="1.4"/>
+  <!-- Row 1 -->
+  <g filter="url(#tagShadow)">
+    <rect x="40" y="26" width="116" height="46" rx="9" fill="#2D323A"/>
+    <rect x="160" y="26" width="118" height="46" rx="9" fill="url(#vBlue)"/>
+    <text x="98" y="49" class="label key" text-anchor="middle">Linux</text>
+    <text x="219" y="49" class="label value" text-anchor="middle">First</text>
+  </g>
 
-  <g font-family="Inter, Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" fill="#F6FAFF" filter="url(#softShadow)">
-    <!-- Row 1 -->
-    <rect x="30" y="32" width="170" height="40" rx="9" fill="url(#gBlue)"/>
-    <text x="115" y="58" text-anchor="middle">Linux First</text>
+  <g filter="url(#tagShadow)">
+    <rect x="560" y="26" width="96" height="46" rx="9" fill="#2D323A"/>
+    <rect x="660" y="26" width="82" height="46" rx="9" fill="url(#vBlue)"/>
+    <text x="608" y="49" class="label key" text-anchor="middle">C++</text>
+    <text x="701" y="49" class="label value" text-anchor="middle">20</text>
+  </g>
 
-    <rect x="214" y="32" width="118" height="40" rx="9" fill="url(#gIndigo)"/>
-    <text x="273" y="58" text-anchor="middle">C++ 20</text>
+  <g filter="url(#tagShadow)">
+    <rect x="1080" y="26" width="298" height="46" rx="9" fill="#2D323A"/>
+    <rect x="1382" y="26" width="78" height="46" rx="9" fill="url(#vBlue)"/>
+    <text x="1229" y="49" class="label key" text-anchor="middle">Reinforcement Learning</text>
+    <text x="1421" y="49" class="label value" text-anchor="middle">PPO</text>
+  </g>
 
-    <rect x="346" y="32" width="286" height="40" rx="9" fill="url(#gCyan)"/>
-    <text x="489" y="58" text-anchor="middle">Reinforcement Learning</text>
+  <!-- Row 2 -->
+  <g filter="url(#tagShadow)">
+    <rect x="40" y="104" width="146" height="46" rx="9" fill="#2D323A"/>
+    <rect x="190" y="104" width="218" height="46" rx="9" fill="url(#vGreen)"/>
+    <text x="113" y="127" class="label key" text-anchor="middle">Backend</text>
+    <text x="299" y="127" class="label value" text-anchor="middle">LibTorch CPU</text>
+  </g>
 
-    <rect x="646" y="32" width="94" height="40" rx="9" fill="url(#gTeal)"/>
-    <text x="693" y="58" text-anchor="middle">PPO</text>
+  <g filter="url(#tagShadow)">
+    <rect x="560" y="104" width="146" height="46" rx="9" fill="#2D323A"/>
+    <rect x="710" y="104" width="128" height="46" rx="9" fill="url(#vCyan)"/>
+    <text x="633" y="127" class="label key" text-anchor="middle">Tracking</text>
+    <text x="774" y="127" class="label value" text-anchor="middle">SQLite</text>
+  </g>
 
-    <rect x="754" y="32" width="302" height="40" rx="9" fill="url(#gBlue)"/>
-    <text x="905" y="58" text-anchor="middle">Backend LibTorch CPU</text>
+  <g filter="url(#tagShadow)">
+    <rect x="1080" y="104" width="176" height="46" rx="9" fill="#2D323A"/>
+    <rect x="1260" y="104" width="300" height="46" rx="9" fill="url(#vBlue)"/>
+    <text x="1168" y="127" class="label key" text-anchor="middle">Simulation</text>
+    <text x="1410" y="127" class="label value" text-anchor="middle">Orbital Mission Direction</text>
+  </g>
 
-    <rect x="1070" y="32" width="254" height="40" rx="9" fill="url(#gIndigo)"/>
-    <text x="1197" y="58" text-anchor="middle">Tracking SQLite</text>
+  <!-- Row 3 -->
+  <g filter="url(#tagShadow)">
+    <rect x="40" y="182" width="164" height="46" rx="9" fill="#2D323A"/>
+    <rect x="208" y="182" width="250" height="46" rx="9" fill="url(#vBlue)"/>
+    <text x="122" y="205" class="label key" text-anchor="middle">Telemetry</text>
+    <text x="332" y="205" class="label value" text-anchor="middle">Run/Episode/Event</text>
+  </g>
 
-    <!-- Row 2 -->
-    <rect x="30" y="88" width="142" height="40" rx="9" fill="url(#gTeal)"/>
-    <text x="101" y="114" text-anchor="middle">Simulation</text>
+  <g filter="url(#tagShadow)">
+    <rect x="560" y="182" width="206" height="46" rx="9" fill="#2D323A"/>
+    <rect x="770" y="182" width="176" height="46" rx="9" fill="url(#vGreen)"/>
+    <text x="663" y="205" class="label key" text-anchor="middle">Benchmarking</text>
+    <text x="858" y="205" class="label value" text-anchor="middle">Reproducible</text>
+  </g>
 
-    <rect x="186" y="88" width="306" height="40" rx="9" fill="url(#gCyan)"/>
-    <text x="339" y="114" text-anchor="middle">Orbital Mission Direction</text>
+  <g filter="url(#tagShadow)">
+    <rect x="1080" y="182" width="96" height="46" rx="9" fill="#2D323A"/>
+    <rect x="1180" y="182" width="318" height="46" rx="9" fill="url(#vPurple)"/>
+    <text x="1128" y="205" class="label key" text-anchor="middle">UML</text>
+    <text x="1339" y="205" class="label value" text-anchor="middle">Architecture Discipline</text>
+  </g>
 
-    <rect x="506" y="88" width="140" height="40" rx="9" fill="url(#gBlue)"/>
-    <text x="576" y="114" text-anchor="middle">Telemetry</text>
+  <!-- Row 4 -->
+  <g filter="url(#tagShadow)">
+    <rect x="40" y="260" width="136" height="46" rx="9" fill="#2D323A"/>
+    <rect x="180" y="260" width="178" height="46" rx="9" fill="url(#vBlue)"/>
+    <text x="108" y="283" class="label key" text-anchor="middle">Systems</text>
+    <text x="269" y="283" class="label value" text-anchor="middle">Engineering</text>
+  </g>
 
-    <rect x="660" y="88" width="214" height="40" rx="9" fill="url(#gIndigo)"/>
-    <text x="767" y="114" text-anchor="middle">Run/Episode/Event</text>
+  <g filter="url(#tagShadow)">
+    <rect x="560" y="260" width="122" height="46" rx="9" fill="#2D323A"/>
+    <rect x="686" y="260" width="140" height="46" rx="9" fill="url(#vRed)"/>
+    <text x="622" y="283" class="label key" text-anchor="middle">ci</text>
 
-    <rect x="888" y="88" width="176" height="40" rx="9" fill="url(#gTeal)"/>
-    <text x="976" y="114" text-anchor="middle">Benchmarking</text>
+    <!-- compact GitHub-like icon on key block -->
+    <g transform="translate(654 272)">
+      <circle cx="10" cy="10" r="8.2" fill="#EAF0FA"/>
+      <path d="M6.8 12.6V10.9C6.8 8.9 8.4 7.4 10.4 7.4H10.7C12.7 7.4 14.3 8.9 14.3 10.9V12.6C14.3 13.7 13.4 14.6 12.3 14.6H8.8C7.7 14.6 6.8 13.7 6.8 12.6Z" fill="#2D323A"/>
+      <path d="M8.2 7.8L9.2 6.3L10.1 7.5M12.9 7.8L11.9 6.3L11 7.5" stroke="#2D323A" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
 
-    <rect x="1078" y="88" width="174" height="40" rx="9" fill="url(#gCyan)"/>
-    <text x="1165" y="114" text-anchor="middle">Reproducible</text>
+    <text x="756" y="283" class="label value" text-anchor="middle">failing</text>
+  </g>
 
-    <rect x="1266" y="88" width="82" height="40" rx="9" fill="url(#gPurple)"/>
-    <text x="1307" y="114" text-anchor="middle">UML</text>
+  <g filter="url(#tagShadow)">
+    <rect x="1080" y="260" width="84" height="46" rx="9" fill="#2D323A"/>
+    <rect x="1168" y="260" width="254" height="46" rx="9" fill="url(#vGreen)"/>
+    <text x="1122" y="283" class="label key" text-anchor="middle">CI</text>
+    <text x="1295" y="283" class="label value" text-anchor="middle">Smoke Benchmark</text>
+  </g>
 
-    <rect x="1362" y="88" width="208" height="40" rx="9" fill="url(#gPurple)"/>
-    <text x="1466" y="114" text-anchor="middle">Architecture Discipline</text>
+  <!-- Row 5 -->
+  <g filter="url(#tagShadow)">
+    <rect x="40" y="338" width="142" height="46" rx="9" fill="#2D323A"/>
+    <rect x="186" y="338" width="156" height="46" rx="9" fill="url(#vOrangeDark)"/>
+    <text x="111" y="361" class="label key" text-anchor="middle">Optional</text>
+    <text x="264" y="361" class="label value" text-anchor="middle">MuJoCo</text>
+  </g>
 
-    <!-- Row 3 -->
-    <rect x="30" y="144" width="230" height="40" rx="9" fill="url(#gPurple)"/>
-    <text x="145" y="170" text-anchor="middle">Systems Engineering</text>
+  <g filter="url(#tagShadow)">
+    <rect x="560" y="338" width="124" height="46" rx="9" fill="#2D323A"/>
+    <rect x="688" y="338" width="232" height="46" rx="9" fill="url(#vOrangeLight)"/>
+    <text x="622" y="361" class="label key" text-anchor="middle">Future</text>
+    <text x="804" y="361" class="label value" text-anchor="middle">TensorRT Path</text>
+  </g>
 
-    <rect x="274" y="144" width="124" height="40" rx="9" fill="url(#gRed)"/>
-    <text x="336" y="170" text-anchor="middle">CI failing</text>
-
-    <rect x="412" y="144" width="246" height="40" rx="9" fill="url(#gIndigo)"/>
-    <text x="535" y="170" text-anchor="middle">CI Smoke Benchmark</text>
-
-    <rect x="672" y="144" width="202" height="40" rx="9" fill="url(#gAmber)"/>
-    <text x="773" y="170" text-anchor="middle">Optional MuJoCo</text>
-
-    <rect x="888" y="144" width="248" height="40" rx="9" fill="url(#gAmber)"/>
-    <text x="1012" y="170" text-anchor="middle">Future TensorRT Path</text>
+  <g filter="url(#tagShadow)">
+    <rect x="1080" y="338" width="148" height="46" rx="9" fill="#2D323A"/>
+    <rect x="1232" y="338" width="170" height="46" rx="9" fill="url(#vGrayLight)"/>
+    <text x="1154" y="361" class="label key" text-anchor="middle">Baseline</text>
+    <text x="1317" y="361" class="label value" text-anchor="middle">CPU Only</text>
   </g>
 </svg>
