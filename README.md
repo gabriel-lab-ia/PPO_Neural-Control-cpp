@@ -4,7 +4,7 @@
 
 # Orbital Neural Control CPP
 
-**C++20 orbital autonomy engineering baseline for PPO control, reproducible experiments, telemetry persistence, and benchmarkable evaluation.**
+**C++20 autonomy engineering baseline for PPO-based continuous control, reproducible experiments, telemetry persistence, and benchmarkable evaluation.**
 
 `nmc` is the primary CLI binary (`train`, `eval`, `benchmark`). The project is CPU-first by default.
 
@@ -66,6 +66,9 @@ Execution scope:
 
 Most RL repositories optimize for short-lived experiments. This repository optimizes for maintainable autonomy engineering
 
+Current baseline environments use low-dimensional continuous-control dynamics.
+Orbital dynamics integration is an explicit research direction rather than a fully implemented simulation layer at this stage.
+
 - layered C++ architecture with explicit boundaries
 - reproducible train/eval/benchmark workflows
 - deterministic smoke path for CI validation
@@ -97,6 +100,44 @@ cmake --build --preset build
 ./build/nmc eval --checkpoint artifacts/latest/checkpoint.pt --episodes 10 --backend libtorch --run-id eval_cpu_001
 ```
 
+### Example output (smoke benchmark)
+
+```json
+{
+  "run_id": "smoke_local",
+  "env": "point_mass",
+  "updates": 30,
+  "backend": "libtorch_cpu",
+  "deterministic": true,
+  "status": "ok"
+}
+```
+
+Generated at:
+
+`artifacts/benchmarks/latest.json`
+
+### Baseline environment
+
+The default environment is a lightweight continuous-control surrogate: `point_mass`.
+
+Properties:
+
+- continuous state space
+- continuous action space
+- deterministic CPU execution
+- fast iteration cycle
+- used to validate PPO training loop integrity
+- minimal dynamics suitable for CI smoke validation
+
+This environment is a scaffold before higher-fidelity orbital simulation layers.
+
+### Reference smoke performance
+
+| env | backend | updates | deterministic |
+| --- | --- | --- | --- |
+| point_mass | libtorch CPU | 30 | yes |
+
 ## Architecture
 
 ### Baseline Runtime (Implemented Today)
@@ -111,7 +152,9 @@ The executable baseline lives in `src/` and is intentionally layered. This is th
 
 ### Expansion Modules (Optional, Not Required for Baseline Build)
 
-Expansion modules are isolated from the baseline runtime:
+Expansion modules represent research surfaces and integration paths.
+They are intentionally decoupled from the baseline runtime.
+Some modules provide scaffolding for future experiments:
 
 - `core/`: orbital dynamics/control primitives
 - `control/`: baseline LQR/PID controllers
