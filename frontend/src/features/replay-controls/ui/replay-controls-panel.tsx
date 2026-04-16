@@ -1,6 +1,6 @@
 "use client";
 
-import { Pause, Play, RotateCcw } from "lucide-react";
+import { Gauge, Pause, Play, RotateCcw } from "lucide-react";
 
 import { Panel, PanelBody, PanelHeader, PanelTitle } from "@/shared/ui/panel";
 
@@ -37,7 +37,7 @@ export function ReplayControlsPanel({
           <button
             type="button"
             onClick={onTogglePlay}
-            className="inline-flex items-center gap-2 rounded-lg border border-cyan-400/40 bg-cyan-400/12 px-3 py-1.5 text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/18"
+            className="inline-flex items-center gap-2 rounded-lg border border-cyan-300/45 bg-cyan-300/12 px-3 py-1.5 text-sm font-medium text-cyan-100 transition hover:bg-cyan-300/20"
           >
             {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             {isPlaying ? "Pause" : "Play"}
@@ -46,18 +46,19 @@ export function ReplayControlsPanel({
           <button
             type="button"
             onClick={onReset}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-600 bg-slate-800/70 px-3 py-1.5 text-sm font-medium text-slate-100 transition hover:bg-slate-700/75"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-500/70 bg-black/55 px-3 py-1.5 text-sm font-medium text-slate-100 transition hover:border-cyan-300/50"
           >
             <RotateCcw className="h-4 w-4" />
             Reset
           </button>
 
-          <label className="ml-auto flex items-center gap-2 text-sm text-slate-300">
+          <label className="ml-auto flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-slate-300">
+            <Gauge className="h-3.5 w-3.5" />
             speed
             <select
               value={String(speed)}
               onChange={(event) => onSpeedChange(Number(event.target.value))}
-              className="rounded-md border border-slate-700 bg-slate-950/80 px-2 py-1 text-sm text-slate-100 outline-none ring-cyan-300 focus:ring-2"
+              className="rounded-md border border-cyan-200/30 bg-black/70 px-2 py-1 text-sm text-slate-100 outline-none ring-cyan-200 focus:ring-2"
             >
               {speedOptions.map((option) => (
                 <option key={option} value={option}>
@@ -70,8 +71,8 @@ export function ReplayControlsPanel({
 
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs uppercase tracking-[0.14em] text-slate-400">
-            <span>timeline</span>
-            <span>
+            <span>timeline scrubber</span>
+            <span className="mono text-slate-200">
               frame {frameIndex + 1} / {frameCount}
             </span>
           </div>
@@ -82,7 +83,7 @@ export function ReplayControlsPanel({
             step={1}
             value={frameIndex}
             onChange={(event) => onFrameChange(Number(event.target.value))}
-            className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-slate-800"
+            className="h-2 w-full cursor-pointer appearance-none"
           />
         </div>
       </PanelBody>

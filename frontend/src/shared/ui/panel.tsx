@@ -6,7 +6,7 @@ export function Panel({ className, ...props }: HTMLAttributes<HTMLDivElement>): 
   return (
     <section
       className={cn(
-        "rounded-2xl border border-slate-700/70 bg-slate-950/55 shadow-[0_10px_40px_rgba(5,16,32,0.45)] backdrop-blur-sm",
+        "hud-panel glow-border rounded-2xl border border-cyan-200/15 bg-[rgba(8,11,18,0.66)] shadow-[0_18px_60px_rgba(0,0,0,0.6)] backdrop-blur-md",
         className,
       )}
       {...props}
@@ -15,18 +15,24 @@ export function Panel({ className, ...props }: HTMLAttributes<HTMLDivElement>): 
 }
 
 export function PanelHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>): JSX.Element {
-  return <header className={cn("border-b border-slate-700/55 px-5 py-4", className)} {...props} />;
+  return (
+    <header
+      className={cn(
+        "border-b border-cyan-200/10 px-4 py-3 sm:px-5 sm:py-4",
+        "bg-gradient-to-r from-cyan-300/[0.03] via-transparent to-violet-400/[0.04]",
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
 export function PanelBody({ className, ...props }: HTMLAttributes<HTMLDivElement>): JSX.Element {
-  return <div className={cn("px-5 py-4", className)} {...props} />;
+  return <div className={cn("px-4 py-4 sm:px-5", className)} {...props} />;
 }
 
 export function PanelTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>): JSX.Element {
   return (
-    <h3
-      className={cn("text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200/95", className)}
-      {...props}
-    />
+    <h3 className={cn("text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/95", className)} {...props} />
   );
 }

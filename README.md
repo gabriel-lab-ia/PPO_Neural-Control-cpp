@@ -145,7 +145,8 @@ Implemented UX highlights:
 
 - replay mode and live mode
 - typed API client from OpenAPI contract (`frontend/src/shared/api/generated/orbital-api.ts`)
-- 3D Earth-like rendering with continent-aware procedural textures
+- 3D Earth mission viewport with OrbitControls, atmosphere glow, orbit lines, and animated satellite
+- local high-quality Earth texture support (`frontend/public/textures/earth/*`) with safe procedural fallback
 - orbit path + satellite trace + timeline scrubber + event markers
 - technical telemetry and benchmark tables for engineering inspection
   

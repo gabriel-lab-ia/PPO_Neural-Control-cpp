@@ -1,17 +1,20 @@
-@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
   color-scheme: dark;
-  --mission-bg: #020611;
-  --mission-bg-soft: #071223;
-  --mission-panel: #0c1729;
-  --mission-panel-border: rgba(70, 93, 122, 0.6);
-  --mission-text: #e6eef9;
-  --mission-text-muted: #94a5be;
-  --mission-accent: #4ac7ff;
+  --mission-bg: #050505;
+  --mission-bg-soft: #090909;
+  --mission-panel: rgba(9, 12, 20, 0.64);
+  --mission-panel-strong: rgba(8, 11, 18, 0.84);
+  --mission-panel-border: rgba(84, 213, 255, 0.22);
+  --mission-text: #f4f7ff;
+  --mission-text-muted: #8b9bb5;
+  --mission-accent: #00f5ff;
+  --mission-accent-soft: #67e8f9;
+  --mission-purple: #8b5cf6;
 }
 
 * {
@@ -19,15 +22,18 @@
 }
 
 html,
-body {
+body,
+#root {
   margin: 0;
   min-height: 100%;
-  background: radial-gradient(circle at 8% -10%, #10233d 0%, transparent 48%),
-    radial-gradient(circle at 92% 8%, #0a1a2f 0%, transparent 38%),
-    linear-gradient(180deg, #020611 0%, #040a15 100%);
+  background: var(--mission-bg);
   color: var(--mission-text);
-  font-family: "IBM Plex Sans", "Segoe UI", "Helvetica Neue", sans-serif;
+  font-family: "Inter", "Segoe UI", "Helvetica Neue", sans-serif;
   letter-spacing: 0.01em;
+}
+
+body {
+  overflow-x: hidden;
 }
 
 a {
@@ -35,57 +41,173 @@ a {
   text-decoration: none;
 }
 
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  letter-spacing: 0.03em;
+}
+
+code,
+pre,
+.mono {
+  font-family: "JetBrains Mono", "Space Mono", monospace;
+}
+
 .mission-shell {
   position: relative;
   min-height: 100vh;
   overflow: hidden;
+  background: radial-gradient(circle at 16% -18%, rgba(0, 245, 255, 0.085), transparent 40%),
+    radial-gradient(circle at 78% 118%, rgba(139, 92, 246, 0.08), transparent 44%),
+    linear-gradient(180deg, #030303 0%, #000000 100%);
+}
+
+.mission-shell::before,
+.mission-shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.mission-shell::before {
+  background-image: radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.35) 0.5px, transparent 1px),
+    radial-gradient(circle at 64% 42%, rgba(255, 255, 255, 0.28) 0.5px, transparent 1px),
+    radial-gradient(circle at 82% 14%, rgba(255, 255, 255, 0.2) 0.5px, transparent 1px),
+    radial-gradient(circle at 34% 78%, rgba(255, 255, 255, 0.26) 0.5px, transparent 1px),
+    radial-gradient(circle at 52% 66%, rgba(255, 255, 255, 0.2) 0.5px, transparent 1px);
+  background-size: 240px 240px, 300px 300px, 280px 280px, 260px 260px, 220px 220px;
+  opacity: 0.13;
+}
+
+.mission-shell::after {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.02) 0,
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  opacity: 0.08;
+  mix-blend-mode: soft-light;
 }
 
 .mission-shell__gradient {
   pointer-events: none;
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(circle at 22% 12%, rgba(56, 189, 248, 0.12) 0%, transparent 30%),
-    radial-gradient(circle at 86% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 28%),
-    linear-gradient(180deg, rgba(2, 10, 23, 0.3), rgba(2, 6, 16, 0.7)),
-    repeating-linear-gradient(
-      90deg,
-      rgba(45, 78, 120, 0.04) 0,
-      rgba(45, 78, 120, 0.04) 1px,
-      transparent 1px,
-      transparent 42px
-    );
-}
-
-h1,
-h2,
-h3,
-h4 {
-  font-family: "Space Mono", "IBM Plex Sans", sans-serif;
-  letter-spacing: 0.02em;
+  background: radial-gradient(circle at 80% -6%, rgba(103, 232, 249, 0.12), transparent 28%),
+    radial-gradient(circle at -5% 100%, rgba(103, 232, 249, 0.08), transparent 32%),
+    radial-gradient(circle at 65% 66%, rgba(139, 92, 246, 0.09), transparent 42%);
 }
 
 .mission-shell__content {
   position: relative;
   z-index: 1;
   margin: 0 auto;
-  width: min(1440px, 100%);
-  padding: 2rem 1.1rem 1.2rem;
+  width: min(1760px, 100%);
+  padding: 1.4rem 1rem 1.2rem;
 }
 
 @media (min-width: 640px) {
   .mission-shell__content {
-    padding: 2.2rem 1.8rem 1.4rem;
+    padding: 1.7rem 1.35rem 1.3rem;
   }
 }
 
 @media (min-width: 1280px) {
   .mission-shell__content {
-    padding: 2.4rem 2.1rem 1.6rem;
+    padding: 1.85rem 1.7rem 1.5rem;
   }
+}
+
+.hud-panel {
+  border: 1px solid var(--mission-panel-border);
+  background: linear-gradient(180deg, rgba(11, 15, 24, 0.78) 0%, rgba(6, 9, 15, 0.62) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 18px 64px rgba(0, 0, 0, 0.55),
+    0 0 24px rgba(0, 245, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.hud-label {
+  font-size: 0.67rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #7f8fb0;
+}
+
+.hud-value {
+  font-family: "JetBrains Mono", monospace;
+  color: #effbff;
+}
+
+.glow-border {
+  position: relative;
+}
+
+.glow-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  border: 1px solid rgba(103, 232, 249, 0.24);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.neon-pill {
+  border: 1px solid rgba(103, 232, 249, 0.45);
+  background: rgba(9, 36, 50, 0.38);
+  color: #c9f9ff;
+  box-shadow: 0 0 14px rgba(0, 245, 255, 0.18);
+}
+
+.scanline-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.16) 60%, transparent 100%);
+  opacity: 0.36;
+}
+
+.metric-bar {
+  position: relative;
+  height: 8px;
+  border-radius: 9999px;
+  background: rgba(54, 67, 92, 0.58);
+  overflow: hidden;
+}
+
+.metric-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(0, 245, 255, 0.95), rgba(103, 232, 249, 0.7));
+  box-shadow: 0 0 14px rgba(0, 245, 255, 0.45);
 }
 
 input[type="range"] {
   accent-color: var(--mission-accent);
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(20, 30, 48, 0.85), rgba(10, 18, 30, 0.9));
+  border: 1px solid rgba(103, 232, 249, 0.3);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  margin-top: -4px;
+  background: radial-gradient(circle at 30% 30%, #d9fdff 0%, #00f5ff 46%, #0891b2 100%);
+  box-shadow: 0 0 12px rgba(0, 245, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.6);
 }

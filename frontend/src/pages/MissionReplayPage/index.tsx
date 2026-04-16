@@ -87,6 +87,7 @@ export function MissionReplayPage(): JSX.Element {
     if (runIds.length === 0) {
       return;
     }
+
     if (!runIds.includes(selectedRunId)) {
       setSelectedRunId(runIds[0] ?? defaultDataset.run.runId);
     }
@@ -177,40 +178,52 @@ export function MissionReplayPage(): JSX.Element {
     );
   }
 
+  const dataSource = runsLoading ? "loading" : runs.length > 0 ? "backend api" : "mock fallback";
+
   return (
     <main className="mission-shell">
       <div className="mission-shell__gradient" />
+
       <div className="mission-shell__content">
-        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-slate-700/65 bg-slate-950/55 px-3 py-2 text-xs uppercase tracking-[0.12em] text-slate-300">
-          <span>data source: {runsLoading ? "loading" : runs.length > 0 ? "backend api" : "mock fallback"}</span>
+        <div className="hud-panel glow-border mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-cyan-200/15 px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-slate-300">
+          <span>data source: {dataSource}</span>
           <span className="text-slate-500">|</span>
           <span>mode:</span>
+
           <button
             type="button"
             onClick={() => setMode("replay")}
-            className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
-              mode === "replay" ? "bg-cyan-500/20 text-cyan-100" : "bg-slate-800/80 text-slate-300"
+            className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+              mode === "replay"
+                ? "border border-cyan-300/45 bg-cyan-300/14 text-cyan-100"
+                : "border border-slate-600/80 bg-black/50 text-slate-300"
             }`}
           >
             replay
           </button>
+
           <button
             type="button"
             onClick={() => setMode("live")}
-            className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
-              mode === "live" ? "bg-cyan-500/20 text-cyan-100" : "bg-slate-800/80 text-slate-300"
+            className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+              mode === "live"
+                ? "border border-cyan-300/45 bg-cyan-300/14 text-cyan-100"
+                : "border border-slate-600/80 bg-black/50 text-slate-300"
             }`}
           >
             live
           </button>
+
           <span className="text-slate-500">|</span>
-          <span>stream: {liveStream.connected ? "connected" : "disconnected"}</span>
+          <span className={liveStream.connected ? "text-emerald-200" : "text-amber-200"}>
+            stream: {liveStream.connected ? "connected" : "disconnected"}
+          </span>
           {liveStream.error ? <span className="text-amber-300">{liveStream.error}</span> : null}
         </div>
 
         <MissionTopbar runs={runsForTopbar} selectedRun={selectedRun} onSelectRun={setSelectedRunId} />
 
-        <section className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <section className="mt-5 grid gap-4 2xl:grid-cols-[minmax(0,1fr)_380px]">
           <OrbitalCanvasWidget frame={currentFrame} orbitPath={dataset.orbitPath} />
           <TelemetrySidebarWidget frame={currentFrame} run={selectedRun} benchmark={dataset.benchmark} events={dataset.events} />
         </section>

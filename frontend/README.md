@@ -2,52 +2,25 @@
 
 React + TypeScript + Vite mission-control frontend for orbital replay and telemetry inspection.
 
-This module is a serious UI foundation for the orbital autonomy platform, with typed replay contracts and modular architecture. It currently runs on mock datasets (no live backend requirement).
+This UI is wired to typed API contracts and can run with backend telemetry or local mock fallback.
 
-## Current Scope (MVP)
+## What is Implemented
 
-- Mission Replay screen with 3D orbital viewport
-- Telemetry sidebar with engineering fields
-- Replay timeline controls (play/pause/reset/speed/scrub)
-- Run selection and benchmark summary cards
-- Run Explorer screen (`/runs`) for replay dataset inspection
+- Premium dark mission-control layout (desktop-first, responsive)
+- 3D orbital viewport (React Three Fiber + Three.js + OrbitControls)
+- Earth rendering with local high-quality textures when available
+- Fallback procedural Earth textures if texture files are not present
+- Live/replay modes with timeline scrubber and event markers
+- Technical telemetry cards/tables and benchmark summary panel
+- Run Explorer page (`/runs`) for run registry inspection
 
-## Architecture
+## Stack
 
-```text
-frontend/src/
-  app/
-    providers/
-    layout/
-    router/
-  pages/
-    MissionReplayPage/
-    RunExplorerPage/
-  widgets/
-    MissionTopbar/
-    OrbitalCanvas/
-    TelemetrySidebar/
-    ReplayTimeline/
-    BenchmarkCard/
-  features/
-    run-selection/
-    orbital-view/
-    telemetry-inspection/
-    replay-controls/
-    benchmark-summary/
-  entities/
-    run/
-    telemetry/
-    orbit/
-    replay/
-    episode/
-  shared/
-    ui/
-    hooks/
-    lib/
-    config/
-    mock/
-```
+- React 18 + TypeScript (strict)
+- Vite
+- Three.js + `@react-three/fiber` + `@react-three/drei`
+- TailwindCSS
+- OpenAPI-generated typed API client
 
 ## Local Run
 
@@ -59,16 +32,34 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-## Optional Backend Wiring (future integration path)
+## Earth Texture Setup (Recommended)
 
-The current MVP is mock-data-first. When backend telemetry integration is added, use Vite public env names:
+For realistic Earth material maps, place files in:
+
+```text
+frontend/public/textures/earth/
+  earth_day_4k.jpg
+  earth_night_4k.jpg
+  earth_clouds_4k.png
+  earth_normal_4k.jpg
+  earth_specular_4k.jpg
+```
+
+If these files are missing, the frontend automatically falls back to procedural textures (no crash).
+
+## Suggested Texture Sources
+
+- NASA Visible Earth / Blue Marble
+- NASA Earth Observatory public imagery
+- Solar System Scope texture packs (license-check before commercial use)
+
+Always verify license and attribution terms before shipping.
+
+## Backend Wiring
+
+Set Vite environment variables when using the backend:
 
 ```bash
 VITE_BACKEND_HTTP=http://localhost:8080
 VITE_BACKEND_WS=ws://localhost:8080
 ```
-
-## Notes
-
-- Design direction: dark, spatial, mission-control UX (Google-Earth-at-night inspiration)
-- This frontend intentionally avoids claiming real-time backend telemetry before that integration is implemented
