@@ -43,8 +43,7 @@ C++20 orbital autonomy/control engineering platform with reproducible PPO workfl
 
 ### Roadmap (not marketed as shipped)
 
-- Higher-fidelity orbital dynamics in baseline runtime
-- TensorRT active path (currently stub in baseline)
+- Full TensorRT engine build/deploy pipeline (calibration cache + engine serialization)
 - CUDA-first training path
 - richer control-safety formalism and hardware-in-the-loop integration
 
@@ -70,10 +69,11 @@ Optional backend architecture:
 
 All commands must run from repository root.
 
-### 1) Bootstrap + configure + build baseline
+### 1) Bootstrap + configure + build baseline (vcpkg)
 
 ```bash
-bash tools/setup_libtorch_cpu.sh
+./tools/setup_vcpkg.sh
+export VCPKG_ROOT="$HOME/.vcpkg"
 cmake --preset dev
 cmake --build --preset build
 ./build/nmc help
@@ -221,6 +221,6 @@ Replay docs:
 ## Honest Constraints
 
 - baseline runtime is CPU-first
-- TensorRT path is a stub in baseline
+- TensorRT path in baseline is API-compatible emulation for parity testing; it is not a production TensorRT engine deployment yet
 - backend/frontend remain optional stack modules
 - frontend 3D globe is mission-UI oriented and not a full geospatial GIS engine

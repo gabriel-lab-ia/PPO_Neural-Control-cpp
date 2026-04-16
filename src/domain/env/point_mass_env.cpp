@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <random>
 #include <utility>
 
 namespace nmc::domain::env {
@@ -16,9 +17,9 @@ constexpr int64_t kMaxSteps = 120;
 constexpr int64_t kStableStepGoal = 6;
 constexpr float kAlignmentEpsilon = 1.0e-4f;
 
-float sample_uniform(const float low, const float high) {
-    const auto value = torch::rand({1}, torch::TensorOptions().dtype(torch::kFloat32));
-    return low + (high - low) * value.item<float>();
+float sample_uniform(std::mt19937_64& rng, const float low, const float high) {
+    std::uniform_real_distribution<float> distribution(low, high);
+    return distribution(rng);
 }
 
 float stable_softplus(const float value, const float scale) {
@@ -29,26 +30,42 @@ float stable_softplus(const float value, const float scale) {
 }  // namespace
 
 PointMassEnv::PointMassEnv(PointMassRewardConfig reward_config)
-    : reward_config_(std::move(reward_config)) {
+    : reward_config_(std::move(reward_config)),
+      safety_shield_(
+          {
+              .max_action_magnitude = 1.0f,
+              .boundary_margin = reward_config_.safety_boundary_margin,
+              .projection_gain = reward_config_.safety_projection_gain
+          }
+      ) {
     reset();
 }
 
 torch::Tensor PointMassEnv::reset() {
-    position_ = sample_uniform(-1.0f, 1.0f);
-    velocity_ = sample_uniform(-0.10f, 0.10f);
-    target_ = sample_uniform(-0.9f, 0.9f);
+    position_ = sample_uniform(rng_, -1.0f, 1.0f);
+    velocity_ = sample_uniform(rng_, -0.10f, 0.10f);
+    target_ = sample_uniform(rng_, -0.9f, 0.9f);
     step_count_ = 0;
     stable_steps_ = 0;
     previous_potential_ = potential(target_ - position_, velocity_);
     return make_observation();
 }
 
+void PointMassEnv::set_seed(const uint64_t seed) {
+    rng_.seed(seed);
+}
+
 StepResult PointMassEnv::step(const torch::Tensor& action) {
-    const auto safe_action = torch::clamp(action, -1.0f, 1.0f).to(torch::kCPU);
-    const float force = safe_action[0].item<float>();
+    const auto bounded_action = torch::clamp(action, -1.0f, 1.0f).to(torch::kCPU);
+    const float projected_force = safety_shield_.project_1d(
+        bounded_action[0].item<float>(),
+        position_,
+        velocity_,
+        kPositionLimit
+    );
     const float previous_potential = previous_potential_;
 
-    velocity_ += (kAccelerationScale * force) - (kDamping * velocity_);
+    velocity_ += (kAccelerationScale * projected_force) - (kDamping * velocity_);
     position_ += velocity_ * kDt;
     position_ = std::clamp(position_, -kPositionLimit, kPositionLimit);
     ++step_count_;
@@ -64,7 +81,7 @@ StepResult PointMassEnv::step(const torch::Tensor& action) {
     const bool terminated = stable_steps_ >= kStableStepGoal;
     const bool truncated = step_count_ >= kMaxSteps;
 
-    float reward = compute_reward(force, position_error, previous_potential);
+    float reward = compute_reward(projected_force, position_error, previous_potential);
     if (terminated) {
         reward += reward_config_.success_bonus;
     }
@@ -140,6 +157,9 @@ float PointMassEnv::compute_reward(
         reward_config_.efficiency_bonus_weight *
         std::exp(-(force * force + reward_config_.efficiency_velocity_weight * velocity_ * velocity_));
 
+    const float lyapunov = position_error * position_error + 0.5f * velocity_ * velocity_;
+    const float lyapunov_cost = reward_config_.lyapunov_weight * lyapunov;
+
     float potential_shaping = 0.0f;
     const float current_potential = potential(position_error, velocity_);
     if (reward_config_.potential_shaping_enabled) {
@@ -157,7 +177,8 @@ float PointMassEnv::compute_reward(
         corridor_cost -
         boundary_cost +
         efficiency_bonus +
-        potential_shaping;
+        potential_shaping -
+        lyapunov_cost;
 }
 
 float PointMassEnv::potential(const float position_error, const float velocity) const {

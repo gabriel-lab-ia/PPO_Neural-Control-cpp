@@ -20,6 +20,9 @@ public:
 
     virtual torch::Tensor reset() = 0;
     virtual StepResult step(const torch::Tensor& action) = 0;
+    virtual void set_seed(uint64_t seed) {
+        (void)seed;
+    }
     virtual int64_t observation_dim() const = 0;
     virtual int64_t action_dim() const = 0;
     virtual std::string name() const = 0;

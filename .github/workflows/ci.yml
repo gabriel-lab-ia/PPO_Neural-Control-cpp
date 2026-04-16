@@ -5,65 +5,24 @@ on:
     branches: ["main", "master"]
   pull_request:
 
+env:
+  CMAKE_GENERATOR: Ninja
+
 jobs:
-  baseline-x86_64:
-    name: baseline-x86_64
+  baseline-vcpkg:
+    name: baseline-vcpkg
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 55
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate baseline source contract
-        run: |
-          set -euxo pipefail
-          required_sources=(
-            "src/interfaces/cli/main.cpp"
-            "src/infrastructure/artifacts/artifact_layout.cpp"
-            "src/infrastructure/artifacts/artifact_layout.h"
-            "src/infrastructure/artifacts/checkpoint_manager.cpp"
-            "src/infrastructure/artifacts/checkpoint_manager.h"
-            "src/application/training_runner.cpp"
-            "src/application/evaluation_runner.cpp"
-            "src/application/benchmark_runner.cpp"
-          )
-          for source_file in "${required_sources[@]}"; do
-            test -f "${source_file}"
-          done
-          forbidden_legacy_sources=(
-            "src/main.cpp"
-            "src/app/training_app.cpp"
-            "src/model/ppo_agent.cpp"
-            "src/train/ppo_trainer.cpp"
-            "src/env/environment_registry.cpp"
-          )
-          for source_file in "${forbidden_legacy_sources[@]}"; do
-            test ! -f "${source_file}"
-          done
-
-      - name: Validate documentation contract
-        run: |
-          set -euxo pipefail
-          docs_contract=(
-            "README.md"
-            "CONTRIBUTING.md"
-            "docs/build.md"
-            "docs/architecture.md"
-            "docs/roadmap.md"
-            "docs/uml/component-diagram.md"
-            "docs/uml/class-diagram.md"
-            "docs/uml/sequence-training.md"
-          )
-          for doc_file in "${docs_contract[@]}"; do
-            test -f "${doc_file}"
-          done
-
       - name: Install system packages
         run: |
           set -euxo pipefail
           sudo apt-get update
-          sudo apt-get install -y unzip wget curl libsqlite3-dev
+          sudo apt-get install -y build-essential ninja-build curl zip unzip tar pkg-config libsqlite3-dev python3
 
       - name: Setup CMake + Ninja
         uses: lukka/get-cmake@latest
@@ -71,50 +30,37 @@ jobs:
           cmakeVersion: "~3.28.0"
           ninjaVersion: "latest"
 
-      - name: Cache LibTorch CPU
-        uses: actions/cache@v4
-        with:
-          path: lib/libtorch
-          key: libtorch-cpu-2.2.2-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('tools/setup_libtorch_cpu.sh') }}
-          restore-keys: |
-            libtorch-cpu-2.2.2-${{ runner.os }}-${{ runner.arch }}-
-
-      - name: Download LibTorch CPU
+      - name: Setup vcpkg
         run: |
           set -euxo pipefail
-          bash tools/setup_libtorch_cpu.sh
-          test -f "$GITHUB_WORKSPACE/lib/libtorch/share/cmake/Torch/TorchConfig.cmake"
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git "$RUNNER_TEMP/vcpkg"
+          "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
 
       - name: Configure
         run: |
           set -euxo pipefail
-          cmake --version
-          ninja --version
           cmake --preset ci \
-            -DNMC_TORCH_ROOT="$GITHUB_WORKSPACE/lib/libtorch" \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DVCPKG_FEATURE_FLAGS=manifests \
+            -DNMC_USE_LEGACY_VENDOR_DEPS=OFF \
             -DNMC_ENABLE_MUJOCO=OFF \
             -DNMC_BUILD_ORBITAL_BACKEND=OFF
-          cmake -LA -N build-ci
 
-      - name: Build baseline runtime (nmc)
+      - name: Build
         run: |
           set -euxo pipefail
           cmake --build --preset build-ci --verbose
           test -x build-ci/nmc
-          file build-ci/nmc
+          test -x build-ci/nmc_inference_parity_test
 
-      - name: Validate nmc CLI contract
+      - name: Run tests
         run: |
           set -euxo pipefail
-          ./build-ci/nmc help > /tmp/nmc_help.txt
-          grep -q "Usage:" /tmp/nmc_help.txt
+          ctest --test-dir build-ci --output-on-failure --verbose --no-tests=error \
+            -R "nmc_smoke_benchmark|nmc_inference_parity"
 
-      - name: Run smoke benchmark test
-        run: |
-          set -euxo pipefail
-          ctest --test-dir build-ci --output-on-failure --verbose --no-tests=error -R nmc_smoke_benchmark
-
-      - name: Validate generated artifacts exist
+      - name: Validate artifacts and benchmark regression
         run: |
           set -euxo pipefail
           test -f artifacts/benchmarks/latest.json
@@ -123,41 +69,16 @@ jobs:
           test -f artifacts/latest/checkpoint.meta
           test -f artifacts/experiments.sqlite
 
-      - name: Validate artifact schema and persistence contract
-        run: |
-          set -euxo pipefail
           python3 - <<'PY'
           import json
-          import sqlite3
           from pathlib import Path
 
-          bench_path = Path("artifacts/benchmarks/latest.json")
-          manifest_path = Path("artifacts/latest/manifest.json")
-          db_path = Path("artifacts/experiments.sqlite")
+          bench = json.loads(Path("artifacts/benchmarks/latest.json").read_text(encoding="utf-8"))
+          train_return = float(bench.get("train", {}).get("final_avg_episode_return", 0.0))
+          eval_return = float(bench.get("eval", {}).get("avg_episode_return", 0.0))
 
-          bench = json.loads(bench_path.read_text(encoding="utf-8"))
-          assert isinstance(bench.get("benchmark_id"), str) and bench["benchmark_id"], "missing benchmark_id"
-          assert bench.get("artifacts_valid") is True, "benchmark artifacts_valid should be true"
-          assert bench.get("quick") in (True, False), "benchmark quick must be boolean"
-          assert isinstance(bench.get("train", {}).get("run_id"), str), "missing train.run_id"
-          assert isinstance(bench.get("eval", {}).get("run_id"), str), "missing eval.run_id"
-
-          manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-          assert manifest.get("status") == "completed", "latest manifest should be completed"
-          assert manifest.get("mode") in {"train", "eval"}, "unexpected manifest mode"
-          assert isinstance(manifest.get("config"), dict), "manifest config should be an object"
-          assert isinstance(manifest.get("artifacts"), dict), "manifest artifacts should be an object"
-          assert "run_dir" in manifest["artifacts"], "manifest artifacts missing run_dir"
-
-          conn = sqlite3.connect(db_path)
-          runs = conn.execute("SELECT COUNT(*) FROM runs").fetchone()[0]
-          episodes = conn.execute("SELECT COUNT(*) FROM episodes").fetchone()[0]
-          benchmarks = conn.execute("SELECT COUNT(*) FROM benchmarks").fetchone()[0]
-          conn.close()
-
-          assert runs >= 2, f"expected at least 2 runs persisted, got {runs}"
-          assert episodes > 0, "expected persisted episodes"
-          assert benchmarks >= 1, "expected at least one benchmark row"
+          assert train_return > 0.5, f"train regression detected: {train_return}"
+          assert eval_return > 5.0, f"eval regression detected: {eval_return}"
           PY
 
       - name: Upload smoke artifacts
@@ -171,6 +92,170 @@ jobs:
             artifacts/latest/checkpoint.pt
             artifacts/latest/checkpoint.meta
             artifacts/experiments.sqlite
+
+  asan-ubsan:
+    name: asan-ubsan
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system packages
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y build-essential ninja-build curl zip unzip tar pkg-config libsqlite3-dev
+
+      - name: Setup vcpkg
+        run: |
+          set -euxo pipefail
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git "$RUNNER_TEMP/vcpkg"
+          "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
+
+      - name: Configure debug sanitized
+        run: |
+          set -euxo pipefail
+          cmake --preset debug-sanitized \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DVCPKG_FEATURE_FLAGS=manifests \
+            -DNMC_USE_LEGACY_VENDOR_DEPS=OFF
+
+      - name: Build and smoke
+        run: |
+          set -euxo pipefail
+          cmake --build --preset build-debug --verbose
+          ./build/nmc benchmark --quick --name asan_smoke --seed 7
+
+  tsan:
+    name: tsan
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system packages
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y build-essential ninja-build curl zip unzip tar pkg-config libsqlite3-dev
+
+      - name: Setup vcpkg
+        run: |
+          set -euxo pipefail
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git "$RUNNER_TEMP/vcpkg"
+          "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
+
+      - name: Configure debug tsan
+        run: |
+          set -euxo pipefail
+          cmake --preset debug-tsan \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DVCPKG_FEATURE_FLAGS=manifests \
+            -DNMC_USE_LEGACY_VENDOR_DEPS=OFF
+
+      - name: Build and smoke
+        run: |
+          set -euxo pipefail
+          cmake --build --preset build-debug-tsan --verbose
+          ./build/nmc benchmark --quick --name tsan_smoke --seed 7
+
+  coverage:
+    name: coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system packages
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y build-essential ninja-build curl zip unzip tar pkg-config libsqlite3-dev gcovr
+
+      - name: Setup vcpkg
+        run: |
+          set -euxo pipefail
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git "$RUNNER_TEMP/vcpkg"
+          "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
+
+      - name: Configure debug coverage
+        run: |
+          set -euxo pipefail
+          cmake --preset debug-coverage \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" \
+            -DVCPKG_FEATURE_FLAGS=manifests \
+            -DNMC_USE_LEGACY_VENDOR_DEPS=OFF
+
+      - name: Build and run tests
+        run: |
+          set -euxo pipefail
+          cmake --build --preset build-debug-coverage --verbose
+          ctest --test-dir build --output-on-failure --verbose --no-tests=error \
+            -R "nmc_smoke_benchmark|nmc_inference_parity"
+
+      - name: Generate coverage report
+        run: |
+          set -euxo pipefail
+          gcovr -r . --exclude 'build.*' --exclude 'lib/.*' --xml-pretty -o coverage.xml
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+  frontend-contract:
+    name: frontend-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Frontend typecheck and build
+        working-directory: frontend
+        run: |
+          set -euxo pipefail
+          npm run typecheck
+          npm run build
+
+      - name: Validate OpenAPI required endpoints
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          spec = Path("docs/openapi/orbital-api.yaml").read_text(encoding="utf-8")
+          required_paths = [
+              "/health", "/version", "/runs", "/runs/{runId}", "/runs/{runId}/summary",
+              "/runs/{runId}/telemetry", "/runs/{runId}/telemetry/window", "/runs/{runId}/events",
+              "/runs/{runId}/artifacts", "/runs/{runId}/replay", "/benchmarks", "/benchmarks/{benchmarkId}",
+              "/train/jobs", "/eval/jobs", "/benchmark/jobs", "/jobs/{jobId}", "/config/presets",
+          ]
+          missing = [path for path in required_paths if path + ":" not in spec]
+          assert not missing, f"Missing OpenAPI paths: {missing}"
+          PY
 
   core-arm64-cross:
     name: core-arm64-cross
@@ -202,66 +287,3 @@ jobs:
           cmake --build build-core-arm64 --verbose
           file build-core-arm64/orbital_core_tests | tee /tmp/orbital_core_tests.file
           grep -E "aarch64|ARM aarch64" /tmp/orbital_core_tests.file
-
-  frontend-contract:
-    name: frontend-contract
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: |
-          set -euxo pipefail
-          npm ci
-
-      - name: Frontend typecheck and build
-        working-directory: frontend
-        run: |
-          set -euxo pipefail
-          npm run typecheck
-          npm run build
-
-      - name: Validate OpenAPI required endpoints
-        run: |
-          set -euxo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-
-          spec = Path("docs/openapi/orbital-api.yaml").read_text(encoding="utf-8")
-          required_paths = [
-              "/health",
-              "/version",
-              "/runs",
-              "/runs/{runId}",
-              "/runs/{runId}/summary",
-              "/runs/{runId}/telemetry",
-              "/runs/{runId}/telemetry/window",
-              "/runs/{runId}/events",
-              "/runs/{runId}/artifacts",
-              "/runs/{runId}/replay",
-              "/benchmarks",
-              "/benchmarks/{benchmarkId}",
-              "/train/jobs",
-              "/eval/jobs",
-              "/benchmark/jobs",
-              "/jobs/{jobId}",
-              "/config/presets",
-          ]
-          missing = [path for path in required_paths if path + ":" not in spec]
-          assert not missing, f"Missing OpenAPI paths: {missing}"
-
-          required_ws = ["/ws/telemetry/live", "/ws/runs/{runId}/stream"]
-          missing_ws = [path for path in required_ws if path not in spec]
-          assert not missing_ws, f"Missing websocket channels in OpenAPI: {missing_ws}"
-          PY

@@ -9,6 +9,7 @@
 
 #include "common/json_utils.h"
 #include "common/time_utils.h"
+#include "common/determinism.h"
 #include "domain/config/config_validation.h"
 #include "domain/env/environment_factory.h"
 #include "domain/ppo/trainer.h"
@@ -88,10 +89,11 @@ TrainingRunOutput TrainingRunner::run(const domain::config::TrainConfig& input_c
     try {
         domain::env::EnvironmentSpec env_spec;
         env_spec.kind = domain::env::parse_environment_kind_or_throw(config.environment);
+        env_spec.seed = static_cast<uint64_t>(config.trainer.seed);
         env_spec.mujoco_model_path = config.mujoco_model_path;
         env_spec.point_mass_reward = config.point_mass_reward;
 
-        torch::manual_seed(static_cast<uint64_t>(config.trainer.seed));
+        common::configure_determinism(static_cast<uint64_t>(config.trainer.seed), config.trainer.torch_num_threads);
         auto env_pack = domain::env::make_environment_pack(env_spec, config.trainer.num_envs);
         domain::ppo::PPOTrainer trainer(config.trainer, std::move(env_pack));
 

@@ -18,6 +18,15 @@ std::string LibTorchPolicyBackend::backend_name() const {
     return "libtorch";
 }
 
+InferenceBackendCapabilities LibTorchPolicyBackend::capabilities() const {
+    return {
+        .supports_dynamic_shapes = true,
+        .supports_fp16 = false,
+        .supports_int8 = false,
+        .configured_precision = InferencePrecision::kFp32
+    };
+}
+
 void LibTorchPolicyBackend::load_checkpoint(const std::filesystem::path& checkpoint_path) {
     if (!std::filesystem::exists(checkpoint_path)) {
         throw std::runtime_error("checkpoint not found: " + checkpoint_path.string());

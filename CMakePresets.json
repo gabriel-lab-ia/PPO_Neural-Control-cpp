@@ -12,12 +12,14 @@
       "generator": "Ninja",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "NMC_EIGEN_ROOT": "${sourceDir}/lib/eigen-source",
-        "NMC_TORCH_ROOT": "${sourceDir}/lib/libtorch",
         "NMC_ENABLE_WARNINGS": "ON",
         "NMC_ENABLE_ASAN": "OFF",
         "NMC_ENABLE_UBSAN": "OFF",
+        "NMC_ENABLE_TSAN": "OFF",
+        "NMC_ENABLE_COVERAGE": "OFF",
         "NMC_ENABLE_LTO": "OFF",
+        "NMC_PGO_MODE": "OFF",
+        "NMC_USE_LEGACY_VENDOR_DEPS": "OFF",
         "NMC_ENABLE_MUJOCO": "OFF",
         "NMC_BUILD_ORBITAL_CORE": "OFF",
         "NMC_BUILD_ORBITAL_BACKEND": "OFF"
@@ -27,16 +29,73 @@
       "name": "dev",
       "displayName": "Baseline Dev (nmc)",
       "inherits": "base",
-      "binaryDir": "${sourceDir}/build"
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_FEATURE_FLAGS": "manifests"
+      }
+    },
+    {
+      "name": "dev-vcpkg",
+      "displayName": "Baseline Dev (vcpkg)",
+      "inherits": "dev",
+      "cacheVariables": {}
     },
     {
       "name": "debug-sanitized",
-      "displayName": "Baseline Debug + Sanitizers",
+      "displayName": "Debug + ASAN/UBSAN",
       "inherits": "dev",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "NMC_ENABLE_ASAN": "ON",
         "NMC_ENABLE_UBSAN": "ON"
+      }
+    },
+    {
+      "name": "debug-tsan",
+      "displayName": "Debug + TSAN",
+      "inherits": "dev",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "NMC_ENABLE_TSAN": "ON"
+      }
+    },
+    {
+      "name": "debug-coverage",
+      "displayName": "Debug + Coverage",
+      "inherits": "dev",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "NMC_ENABLE_COVERAGE": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release + LTO + PGO(auto)",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "NMC_ENABLE_LTO": "ON",
+        "NMC_PGO_MODE": "AUTO"
+      }
+    },
+    {
+      "name": "release-pgo-generate",
+      "displayName": "Release + LTO + PGO(generate)",
+      "inherits": "release",
+      "binaryDir": "${sourceDir}/build-release-pgo-gen",
+      "cacheVariables": {
+        "NMC_PGO_MODE": "GENERATE"
+      }
+    },
+    {
+      "name": "release-pgo-use",
+      "displayName": "Release + LTO + PGO(use)",
+      "inherits": "release",
+      "binaryDir": "${sourceDir}/build-release-pgo-use",
+      "cacheVariables": {
+        "NMC_PGO_MODE": "USE"
       }
     },
     {
@@ -62,7 +121,12 @@
       "name": "ci",
       "displayName": "CI Baseline (nmc)",
       "inherits": "base",
-      "binaryDir": "${sourceDir}/build-ci"
+      "binaryDir": "${sourceDir}/build-ci",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_FEATURE_FLAGS": "manifests",
+        "NMC_USE_LEGACY_VENDOR_DEPS": "OFF"
+      }
     }
   ],
   "buildPresets": [
@@ -70,12 +134,57 @@
       "name": "build",
       "configurePreset": "dev",
       "targets": [
-        "nmc"
+        "nmc",
+        "nmc_inference_parity_test"
+      ]
+    },
+    {
+      "name": "build-vcpkg",
+      "configurePreset": "dev-vcpkg",
+      "targets": [
+        "nmc",
+        "nmc_inference_parity_test"
       ]
     },
     {
       "name": "build-debug",
       "configurePreset": "debug-sanitized",
+      "targets": [
+        "nmc",
+        "nmc_inference_parity_test"
+      ]
+    },
+    {
+      "name": "build-debug-tsan",
+      "configurePreset": "debug-tsan",
+      "targets": [
+        "nmc"
+      ]
+    },
+    {
+      "name": "build-debug-coverage",
+      "configurePreset": "debug-coverage",
+      "targets": [
+        "nmc"
+      ]
+    },
+    {
+      "name": "build-release",
+      "configurePreset": "release",
+      "targets": [
+        "nmc"
+      ]
+    },
+    {
+      "name": "build-release-pgo-generate",
+      "configurePreset": "release-pgo-generate",
+      "targets": [
+        "nmc"
+      ]
+    },
+    {
+      "name": "build-release-pgo-use",
+      "configurePreset": "release-pgo-use",
       "targets": [
         "nmc"
       ]
@@ -102,7 +211,8 @@
       "name": "build-ci",
       "configurePreset": "ci",
       "targets": [
-        "nmc"
+        "nmc",
+        "nmc_inference_parity_test"
       ]
     }
   ],

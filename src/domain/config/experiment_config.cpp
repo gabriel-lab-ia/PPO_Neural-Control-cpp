@@ -69,6 +69,9 @@ std::string to_json(const env::PointMassRewardConfig& config) {
     stream << "\"boundary_soft_margin\":" << config.boundary_soft_margin << ',';
     stream << "\"efficiency_bonus_weight\":" << config.efficiency_bonus_weight << ',';
     stream << "\"efficiency_velocity_weight\":" << config.efficiency_velocity_weight << ',';
+    stream << "\"lyapunov_weight\":" << config.lyapunov_weight << ',';
+    stream << "\"safety_projection_gain\":" << config.safety_projection_gain << ',';
+    stream << "\"safety_boundary_margin\":" << config.safety_boundary_margin << ',';
     stream << "\"potential_shaping_enabled\":" << bool_to_json(config.potential_shaping_enabled) << ',';
     stream << "\"potential_position_weight\":" << config.potential_position_weight << ',';
     stream << "\"potential_velocity_weight\":" << config.potential_velocity_weight << ',';

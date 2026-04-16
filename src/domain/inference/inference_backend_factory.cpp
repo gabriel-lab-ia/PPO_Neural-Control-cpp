@@ -20,8 +20,17 @@ std::optional<InferenceBackendKind> try_parse_inference_backend(const std::strin
         return InferenceBackendKind::kLibTorch;
     }
 
-    if (normalized == "tensorrt" || normalized == "tensorrt_stub") {
-        return InferenceBackendKind::kTensorRtStub;
+    if (normalized == "tensorrt") {
+        return InferenceBackendKind::kTensorRtFp32;
+    }
+    if (normalized == "tensorrt_fp16") {
+        return InferenceBackendKind::kTensorRtFp16;
+    }
+    if (normalized == "tensorrt_int8") {
+        return InferenceBackendKind::kTensorRtInt8;
+    }
+    if (normalized == "tensorrt_stub") {
+        return InferenceBackendKind::kTensorRtFp32;
     }
 
     return std::nullopt;
@@ -42,14 +51,18 @@ std::string inference_backend_to_string(const InferenceBackendKind backend) {
     switch (backend) {
         case InferenceBackendKind::kLibTorch:
             return "libtorch";
-        case InferenceBackendKind::kTensorRtStub:
-            return "tensorrt_stub";
+        case InferenceBackendKind::kTensorRtFp32:
+            return "tensorrt";
+        case InferenceBackendKind::kTensorRtFp16:
+            return "tensorrt_fp16";
+        case InferenceBackendKind::kTensorRtInt8:
+            return "tensorrt_int8";
     }
     return "unknown";
 }
 
 std::string supported_inference_backends() {
-    return "libtorch|tensorrt_stub";
+    return "libtorch|tensorrt|tensorrt_fp16|tensorrt_int8";
 }
 
 std::unique_ptr<PolicyInferenceBackend> make_inference_backend(
@@ -61,8 +74,27 @@ std::unique_ptr<PolicyInferenceBackend> make_inference_backend(
     switch (backend) {
         case InferenceBackendKind::kLibTorch:
             return std::make_unique<LibTorchPolicyBackend>(observation_dim, action_dim, hidden_dim);
-        case InferenceBackendKind::kTensorRtStub:
-            return std::make_unique<TensorRtPolicyBackendStub>();
+        case InferenceBackendKind::kTensorRtFp32:
+            return std::make_unique<TensorRtPolicyBackendStub>(
+                observation_dim,
+                action_dim,
+                hidden_dim,
+                InferencePrecision::kFp32
+            );
+        case InferenceBackendKind::kTensorRtFp16:
+            return std::make_unique<TensorRtPolicyBackendStub>(
+                observation_dim,
+                action_dim,
+                hidden_dim,
+                InferencePrecision::kFp16
+            );
+        case InferenceBackendKind::kTensorRtInt8:
+            return std::make_unique<TensorRtPolicyBackendStub>(
+                observation_dim,
+                action_dim,
+                hidden_dim,
+                InferencePrecision::kInt8
+            );
     }
     throw std::runtime_error("unsupported inference backend kind");
 }

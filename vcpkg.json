@@ -1,0 +1,18 @@
+{
+  "name": "orbital-neural-control-cpp",
+  "version-string": "0.4.0",
+  "description": "C++20 orbital autonomy/control runtime with PPO, deterministic artifacts, and telemetry contracts.",
+  "dependencies": [
+    "eigen3",
+    "sqlite3",
+    "libtorch"
+  ],
+  "features": {
+    "backend": {
+      "description": "Optional backend stack dependencies.",
+      "dependencies": [
+        "boost-system"
+      ]
+    }
+  }
+}

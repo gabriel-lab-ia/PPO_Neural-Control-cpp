@@ -11,6 +11,7 @@
 
 #include "common/json_utils.h"
 #include "common/time_utils.h"
+#include "common/determinism.h"
 #include "domain/config/config_validation.h"
 #include "domain/env/environment_factory.h"
 #include "domain/inference/inference_backend_factory.h"
@@ -77,6 +78,7 @@ std::string evaluation_summary_json(
     const std::string& environment,
     const std::string& backend,
     const std::filesystem::path& checkpoint_path,
+    const domain::inference::InferenceBackendCapabilities& capabilities,
     const float avg_episode_return,
     const float avg_episode_length,
     const float success_rate,
@@ -87,6 +89,11 @@ std::string evaluation_summary_json(
     stream << "  \"run_id\": \"" << common::json_escape(run_id) << "\",\n";
     stream << "  \"environment\": \"" << common::json_escape(environment) << "\",\n";
     stream << "  \"backend\": \"" << common::json_escape(backend) << "\",\n";
+    stream << "  \"backend_capabilities\": {\n";
+    stream << "    \"supports_dynamic_shapes\": " << (capabilities.supports_dynamic_shapes ? "true" : "false") << ",\n";
+    stream << "    \"supports_fp16\": " << (capabilities.supports_fp16 ? "true" : "false") << ",\n";
+    stream << "    \"supports_int8\": " << (capabilities.supports_int8 ? "true" : "false") << "\n";
+    stream << "  },\n";
     stream << "  \"checkpoint_path\": \"" << common::json_escape(checkpoint_path.string()) << "\",\n";
     stream << "  \"episodes\": " << episodes << ",\n";
     stream << "  \"avg_episode_return\": " << avg_episode_return << ",\n";
@@ -144,10 +151,11 @@ EvaluationRunOutput EvaluationRunner::run(const domain::config::EvalConfig& inpu
     try {
         domain::env::EnvironmentSpec env_spec;
         env_spec.kind = domain::env::parse_environment_kind_or_throw(config.environment);
+        env_spec.seed = static_cast<uint64_t>(config.seed);
         env_spec.mujoco_model_path = config.mujoco_model_path;
         env_spec.point_mass_reward = config.point_mass_reward;
 
-        torch::manual_seed(static_cast<uint64_t>(config.seed));
+        common::configure_determinism(static_cast<uint64_t>(config.seed), 1);
         auto env_pack = domain::env::make_environment_pack(env_spec, 1);
         auto environment = std::move(env_pack.environments.front());
 
@@ -162,6 +170,7 @@ EvaluationRunOutput EvaluationRunner::run(const domain::config::EvalConfig& inpu
             hidden_dim
         );
         backend->load_checkpoint(checkpoint_path);
+        const auto capabilities = backend->capabilities();
 
         std::vector<EpisodeEvaluation> episodes;
         episodes.reserve(static_cast<std::size_t>(config.episodes));
@@ -236,6 +245,7 @@ EvaluationRunOutput EvaluationRunner::run(const domain::config::EvalConfig& inpu
             config.environment,
             backend->backend_name(),
             checkpoint_path,
+            capabilities,
             avg_return,
             avg_length,
             success_rate,

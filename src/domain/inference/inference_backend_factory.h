@@ -11,7 +11,9 @@ namespace nmc::domain::inference {
 
 enum class InferenceBackendKind {
     kLibTorch,
-    kTensorRtStub
+    kTensorRtFp32,
+    kTensorRtFp16,
+    kTensorRtInt8
 };
 
 std::optional<InferenceBackendKind> try_parse_inference_backend(std::string_view backend);

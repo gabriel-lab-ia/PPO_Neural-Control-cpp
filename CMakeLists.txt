@@ -26,54 +26,50 @@ endif()
 option(NMC_ENABLE_WARNINGS "Enable stricter compiler warnings" ON)
 option(NMC_ENABLE_ASAN "Enable AddressSanitizer in Debug builds" OFF)
 option(NMC_ENABLE_UBSAN "Enable UndefinedBehaviorSanitizer in Debug builds" OFF)
+option(NMC_ENABLE_TSAN "Enable ThreadSanitizer in Debug builds" OFF)
+option(NMC_ENABLE_COVERAGE "Enable gcov/llvm-cov instrumentation" OFF)
 option(NMC_ENABLE_LTO "Enable link-time optimization in Release-like builds" OFF)
+set(NMC_PGO_MODE "OFF" CACHE STRING "Profile-guided optimization mode: OFF|GENERATE|USE|AUTO")
+set_property(CACHE NMC_PGO_MODE PROPERTY STRINGS OFF GENERATE USE AUTO)
+option(NMC_USE_LEGACY_VENDOR_DEPS "Allow fallback to vendored dependencies in lib/" OFF)
 option(NMC_ENABLE_MUJOCO "Enable MuJoCo environment support" OFF)
 option(NMC_BUILD_ORBITAL_CORE "Build orbital core/control/sim library + tests" OFF)
 option(NMC_BUILD_ORBITAL_BACKEND "Build orbital backend WebSocket/REST service" OFF)
 
 # -----------------------------------------------------------------------------
-# Dependency roots (cache + env override)
+# Dependencies (vcpkg-first, optional legacy fallback)
 # -----------------------------------------------------------------------------
 set(NMC_EIGEN_DEFAULT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/lib/eigen-source")
 set(NMC_TORCH_DEFAULT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/lib/libtorch")
-
-set(NMC_EIGEN_ROOT "${NMC_EIGEN_DEFAULT_ROOT}" CACHE PATH "Path to Eigen root")
-set(NMC_TORCH_ROOT "${NMC_TORCH_DEFAULT_ROOT}" CACHE PATH "Path to LibTorch root")
+set(NMC_EIGEN_ROOT "${NMC_EIGEN_DEFAULT_ROOT}" CACHE PATH "Legacy Eigen root when fallback is enabled")
+set(NMC_TORCH_ROOT "${NMC_TORCH_DEFAULT_ROOT}" CACHE PATH "Legacy LibTorch root when fallback is enabled")
 set(NMC_MUJOCO_ROOT "" CACHE PATH "Optional MuJoCo installation root")
 
-function(nmc_override_root_from_env cache_var default_value env_var probe_relative)
-    if(
-        DEFINED ENV{${env_var}}
-        AND "${${cache_var}}" STREQUAL "${default_value}"
-        AND EXISTS "$ENV{${env_var}}/${probe_relative}"
-    )
-        set(${cache_var} "$ENV{${env_var}}" CACHE PATH "Path to ${cache_var}" FORCE)
+find_package(Eigen3 CONFIG QUIET)
+if(NOT Eigen3_FOUND)
+    if(NMC_USE_LEGACY_VENDOR_DEPS AND EXISTS "${NMC_EIGEN_ROOT}/Eigen/Dense")
+        set(NMC_EIGEN_INCLUDE_DIR "${NMC_EIGEN_ROOT}")
+    else()
+        message(
+            FATAL_ERROR
+            "Eigen3 not found. Configure with vcpkg toolchain or enable NMC_USE_LEGACY_VENDOR_DEPS and provide NMC_EIGEN_ROOT."
+        )
     endif()
-endfunction()
-
-nmc_override_root_from_env(NMC_EIGEN_ROOT "${NMC_EIGEN_DEFAULT_ROOT}" NMC_EIGEN_ROOT "Eigen/Dense")
-nmc_override_root_from_env(NMC_TORCH_ROOT "${NMC_TORCH_DEFAULT_ROOT}" NMC_TORCH_ROOT "share/cmake/Torch/TorchConfig.cmake")
-
-if(NOT EXISTS "${NMC_EIGEN_ROOT}/Eigen/Dense")
-    message(FATAL_ERROR "Eigen not found at ${NMC_EIGEN_ROOT}")
 endif()
 
-if(NOT EXISTS "${NMC_TORCH_ROOT}/share/cmake/Torch/TorchConfig.cmake")
-    message(FATAL_ERROR "LibTorch not found at ${NMC_TORCH_ROOT}")
+find_package(Torch CONFIG QUIET)
+if(NOT Torch_FOUND)
+    if(NMC_USE_LEGACY_VENDOR_DEPS AND EXISTS "${NMC_TORCH_ROOT}/share/cmake/Torch/TorchConfig.cmake")
+        list(PREPEND CMAKE_PREFIX_PATH "${NMC_TORCH_ROOT}")
+        find_package(Torch REQUIRED CONFIG)
+    else()
+        message(
+            FATAL_ERROR
+            "LibTorch not found. Use vcpkg (recommended) or enable NMC_USE_LEGACY_VENDOR_DEPS and set NMC_TORCH_ROOT."
+        )
+    endif()
 endif()
 
-set(NMC_EXPECTED_TORCH_DIR "${NMC_TORCH_ROOT}/share/cmake/Torch")
-if(
-    DEFINED Torch_DIR
-    AND NOT "${Torch_DIR}" STREQUAL "${NMC_EXPECTED_TORCH_DIR}"
-    AND EXISTS "${NMC_EXPECTED_TORCH_DIR}/TorchConfig.cmake"
-)
-    message(STATUS "Resetting cached Torch_DIR to match NMC_TORCH_ROOT")
-    set(Torch_DIR "${NMC_EXPECTED_TORCH_DIR}" CACHE PATH "Torch package configuration directory" FORCE)
-endif()
-
-list(PREPEND CMAKE_PREFIX_PATH "${NMC_TORCH_ROOT}")
-find_package(Torch REQUIRED CONFIG)
 find_package(SQLite3 QUIET)
 if(SQLite3_FOUND)
     set(NMC_SQLITE_LINK_TARGET SQLite::SQLite3)
@@ -140,6 +136,17 @@ function(nmc_apply_sanitizers target)
             target_compile_options(${target} PRIVATE $<$<CONFIG:Debug>:-fsanitize=undefined>)
             target_link_options(${target} PRIVATE $<$<CONFIG:Debug>:-fsanitize=undefined>)
         endif()
+        if(NMC_ENABLE_TSAN)
+            target_compile_options(${target} PRIVATE $<$<CONFIG:Debug>:-fsanitize=thread>)
+            target_link_options(${target} PRIVATE $<$<CONFIG:Debug>:-fsanitize=thread>)
+        endif()
+    endif()
+endfunction()
+
+function(nmc_apply_coverage target)
+    if(NMC_ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(${target} PRIVATE -O0 -g --coverage)
+        target_link_options(${target} PRIVATE --coverage)
     endif()
 endfunction()
 
@@ -155,13 +162,51 @@ function(nmc_try_enable_lto target)
     endif()
 endfunction()
 
+function(nmc_apply_pgo target)
+    if(NOT CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        return()
+    endif()
+
+    string(TOUPPER "${NMC_PGO_MODE}" NMC_PGO_MODE_NORMALIZED)
+    set(NMC_PGO_DATA_DIR "${CMAKE_BINARY_DIR}/pgo")
+    file(MAKE_DIRECTORY "${NMC_PGO_DATA_DIR}")
+    set(NMC_PGO_PROFILE_PATH "${NMC_PGO_DATA_DIR}/default.profdata")
+
+    if(NMC_PGO_MODE_NORMALIZED STREQUAL "GENERATE")
+        target_compile_options(${target} PRIVATE -fprofile-generate=${NMC_PGO_DATA_DIR})
+        target_link_options(${target} PRIVATE -fprofile-generate=${NMC_PGO_DATA_DIR})
+    elseif(NMC_PGO_MODE_NORMALIZED STREQUAL "USE")
+        target_compile_options(${target} PRIVATE -fprofile-use=${NMC_PGO_PROFILE_PATH} -fprofile-correction)
+        target_link_options(${target} PRIVATE -fprofile-use=${NMC_PGO_PROFILE_PATH})
+    elseif(NMC_PGO_MODE_NORMALIZED STREQUAL "AUTO")
+        if(EXISTS "${NMC_PGO_PROFILE_PATH}")
+            target_compile_options(${target} PRIVATE -fprofile-use=${NMC_PGO_PROFILE_PATH} -fprofile-correction)
+            target_link_options(${target} PRIVATE -fprofile-use=${NMC_PGO_PROFILE_PATH})
+        else()
+            target_compile_options(${target} PRIVATE -fprofile-generate=${NMC_PGO_DATA_DIR})
+            target_link_options(${target} PRIVATE -fprofile-generate=${NMC_PGO_DATA_DIR})
+        endif()
+    endif()
+endfunction()
+
 message(STATUS "Orbital Neural Control CPP build configuration")
 message(STATUS "  CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
-message(STATUS "  NMC_TORCH_ROOT: ${NMC_TORCH_ROOT}")
-message(STATUS "  NMC_EIGEN_ROOT: ${NMC_EIGEN_ROOT}")
+message(STATUS "  NMC_USE_LEGACY_VENDOR_DEPS: ${NMC_USE_LEGACY_VENDOR_DEPS}")
+if(Torch_FOUND)
+    message(STATUS "  Torch: found via package config")
+else()
+    message(STATUS "  NMC_TORCH_ROOT: ${NMC_TORCH_ROOT}")
+endif()
+if(Eigen3_FOUND)
+    message(STATUS "  Eigen3: found via package config")
+else()
+    message(STATUS "  NMC_EIGEN_ROOT: ${NMC_EIGEN_ROOT}")
+endif()
 message(STATUS "  NMC_ENABLE_MUJOCO: ${NMC_ENABLE_MUJOCO}")
 message(STATUS "  NMC_BUILD_ORBITAL_CORE: ${NMC_BUILD_ORBITAL_CORE}")
 message(STATUS "  NMC_BUILD_ORBITAL_BACKEND: ${NMC_BUILD_ORBITAL_BACKEND}")
+message(STATUS "  NMC_ENABLE_LTO: ${NMC_ENABLE_LTO}")
+message(STATUS "  NMC_PGO_MODE: ${NMC_PGO_MODE}")
 if(SQLite3_FOUND)
     message(STATUS "  SQLite3 version: ${SQLite3_VERSION}")
 else()
@@ -173,11 +218,13 @@ message(STATUS "  Primary CLI target: nmc")
 # Baseline runtime target: nmc
 # -----------------------------------------------------------------------------
 set(NMC_RUNTIME_SOURCES
+    src/common/determinism.cpp
     src/common/json_utils.cpp
     src/common/time_utils.cpp
     src/domain/config/experiment_config.cpp
     src/domain/config/config_validation.cpp
     src/domain/env/environment_factory.cpp
+    src/domain/env/orbital_6dof_env.cpp
     src/domain/env/point_mass_env.cpp
     src/domain/ppo/gaussian_policy.cpp
     src/domain/ppo/policy_value_model.cpp
@@ -235,15 +282,21 @@ target_compile_features(nmc_runtime PUBLIC cxx_std_20)
 target_include_directories(
     nmc_runtime PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    "${CMAKE_CURRENT_SOURCE_DIR}/sim/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/rl/include"
 )
-target_include_directories(
-    nmc_runtime SYSTEM PRIVATE
-    "${NMC_EIGEN_ROOT}"
-    "${TORCH_INCLUDE_DIRS}"
-)
+
+if(DEFINED NMC_EIGEN_INCLUDE_DIR)
+    target_include_directories(nmc_runtime SYSTEM PRIVATE "${NMC_EIGEN_INCLUDE_DIR}")
+endif()
+if(TORCH_INCLUDE_DIRS)
+    target_include_directories(nmc_runtime SYSTEM PRIVATE "${TORCH_INCLUDE_DIRS}")
+endif()
 
 target_link_libraries(nmc_runtime PUBLIC "${TORCH_LIBRARIES}" "${NMC_SQLITE_LINK_TARGET}")
+if(Eigen3_FOUND)
+    target_link_libraries(nmc_runtime PUBLIC Eigen3::Eigen)
+endif()
 
 if(TORCH_CXX_FLAGS)
     separate_arguments(TORCH_CXX_FLAGS_LIST NATIVE_COMMAND "${TORCH_CXX_FLAGS}")
@@ -253,6 +306,9 @@ endif()
 nmc_apply_warning_profile(nmc_runtime)
 nmc_apply_security_profile(nmc_runtime)
 nmc_apply_sanitizers(nmc_runtime)
+nmc_apply_coverage(nmc_runtime)
+nmc_apply_pgo(nmc_runtime)
+nmc_try_enable_lto(nmc_runtime)
 
 add_executable(nmc)
 target_sources(nmc PRIVATE src/interfaces/cli/main.cpp)
@@ -284,6 +340,8 @@ set_target_properties(
 nmc_apply_warning_profile(nmc)
 nmc_apply_security_profile(nmc)
 nmc_apply_sanitizers(nmc)
+nmc_apply_coverage(nmc)
+nmc_apply_pgo(nmc)
 nmc_try_enable_lto(nmc)
 
 # -----------------------------------------------------------------------------
@@ -299,6 +357,32 @@ set_tests_properties(
     PROPERTIES
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     TIMEOUT 240
+)
+
+add_executable(nmc_inference_parity_test)
+target_sources(nmc_inference_parity_test PRIVATE src/tests/inference_backend_parity.cpp)
+target_compile_features(nmc_inference_parity_test PRIVATE cxx_std_20)
+target_include_directories(
+    nmc_inference_parity_test PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+target_link_libraries(nmc_inference_parity_test PRIVATE nmc_runtime)
+nmc_apply_warning_profile(nmc_inference_parity_test)
+nmc_apply_security_profile(nmc_inference_parity_test)
+nmc_apply_sanitizers(nmc_inference_parity_test)
+nmc_apply_coverage(nmc_inference_parity_test)
+nmc_apply_pgo(nmc_inference_parity_test)
+nmc_try_enable_lto(nmc_inference_parity_test)
+
+add_test(
+    NAME nmc_inference_parity
+    COMMAND nmc_inference_parity_test
+)
+set_tests_properties(
+    nmc_inference_parity
+    PROPERTIES
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    TIMEOUT 120
 )
 
 # -----------------------------------------------------------------------------

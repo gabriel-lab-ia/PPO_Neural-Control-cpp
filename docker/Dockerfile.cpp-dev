@@ -2,7 +2,7 @@ FROM ubuntu:24.04
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential cmake ninja-build python3 python3-pip \
-    unzip wget curl libsqlite3-dev ca-certificates git && \
+    unzip wget curl libsqlite3-dev ca-certificates git pkg-config zip tar && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace
@@ -11,16 +11,24 @@ WORKDIR /workspace
 COPY mlops/requirements.txt /tmp/mlops-requirements.txt
 RUN python3 -m pip install --no-cache-dir -r /tmp/mlops-requirements.txt
 
-# Copy only the baseline build surface.
-COPY CMakeLists.txt CMakePresets.json ./
+# Copy project sources.
+COPY CMakeLists.txt CMakePresets.json vcpkg.json ./
 COPY src ./src
-COPY tools ./tools
+COPY sim ./sim
+COPY rl ./rl
 COPY config ./config
 COPY mlops ./mlops
-COPY lib/eigen-source ./lib/eigen-source
+COPY tools ./tools
 
-RUN bash tools/setup_libtorch_cpu.sh /workspace/lib
-RUN cmake --preset dev -DNMC_TORCH_ROOT=/workspace/lib/libtorch -DNMC_EIGEN_ROOT=/workspace/lib/eigen-source -DNMC_ENABLE_MUJOCO=OFF && \
+# Bootstrap vcpkg and build baseline.
+RUN git clone --depth 1 https://github.com/microsoft/vcpkg.git /opt/vcpkg && \
+    /opt/vcpkg/bootstrap-vcpkg.sh -disableMetrics
+
+RUN cmake --preset dev \
+      -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake \
+      -DVCPKG_FEATURE_FLAGS=manifests \
+      -DNMC_USE_LEGACY_VENDOR_DEPS=OFF \
+      -DNMC_ENABLE_MUJOCO=OFF && \
     cmake --build --preset build
 
 CMD ["bash"]

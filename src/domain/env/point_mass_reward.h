@@ -29,6 +29,11 @@ struct PointMassRewardConfig {
     float efficiency_bonus_weight = 0.10f;
     float efficiency_velocity_weight = 0.35f;
 
+    float lyapunov_weight = 0.15f;
+
+    float safety_projection_gain = 0.65f;
+    float safety_boundary_margin = 0.20f;
+
     bool potential_shaping_enabled = true;
     float potential_position_weight = 0.55f;
     float potential_velocity_weight = 0.22f;

@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.4.0 - Deterministic PPO Runtime + 6DOF Foundations
+
+- Added deterministic runtime bootstrap (`src/common/determinism.*`) and enforced seed propagation through train/eval orchestration.
+- Introduced an explicit 6DOF orbital dynamics contract (`OrbitalDynamics`) with a high-fidelity baseline model (`RK4 + J2 + drag + SRP + Sun/Moon third-body`).
+- Added `OrbitalSixDofEnv` with safety-aware action projection and Lyapunov-shaped reward terms.
+- Expanded inference backend contract with capability introspection and precision modes (`fp32/fp16/int8`) plus parity coverage test (`nmc_inference_parity`).
+- Added CMake presets for TSAN, coverage, and release PGO/LTO profiles; release presets now default to `LTO + PGO(auto)`.
+- Added `vcpkg.json` manifest and aligned Docker/CI/docs to vcpkg-first dependency flow.
+- Updated smoke/benchmark/test path to keep deterministic behavior under one process.
+
 ## 0.3.1 - Build + Documentation Harmonization
 
 - Refactored top-level `CMakeLists.txt` into clearer engineering blocks (toolchain defaults, dependency roots, compile profiles, baseline target, optional modules).

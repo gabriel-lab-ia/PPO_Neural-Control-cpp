@@ -80,6 +80,12 @@ void validate_train_config_or_throw(const TrainConfig& config) {
         config.point_mass_reward.control_soft_threshold > 1.0f) {
         errors.push_back("point_mass_reward.control_soft_threshold must be in [0, 1]");
     }
+    if (config.point_mass_reward.safety_projection_gain < 0.0f || config.point_mass_reward.safety_projection_gain > 1.5f) {
+        errors.push_back("point_mass_reward.safety_projection_gain must be in [0, 1.5]");
+    }
+    if (config.point_mass_reward.safety_boundary_margin <= 0.0f || config.point_mass_reward.safety_boundary_margin > 1.0f) {
+        errors.push_back("point_mass_reward.safety_boundary_margin must be in (0, 1]");
+    }
     if (config.point_mass_reward.potential_gamma <= 0.0f || config.point_mass_reward.potential_gamma > 1.0f) {
         errors.push_back("point_mass_reward.potential_gamma must be in (0, 1]");
     }
@@ -110,6 +116,9 @@ void validate_eval_config_or_throw(const EvalConfig& config) {
     }
     if (config.mujoco_model_path.has_value() && config.mujoco_model_path->empty()) {
         errors.push_back("--mujoco-model path is empty");
+    }
+    if (config.point_mass_reward.safety_projection_gain < 0.0f || config.point_mass_reward.safety_projection_gain > 1.5f) {
+        errors.push_back("point_mass_reward.safety_projection_gain must be in [0, 1.5]");
     }
     if (config.point_mass_reward.potential_gamma <= 0.0f || config.point_mass_reward.potential_gamma > 1.0f) {
         errors.push_back("point_mass_reward.potential_gamma must be in (0, 1]");

@@ -13,6 +13,7 @@ public:
     LibTorchPolicyBackend(int64_t observation_dim, int64_t action_dim, int64_t hidden_dim);
 
     std::string backend_name() const override;
+    InferenceBackendCapabilities capabilities() const override;
     void load_checkpoint(const std::filesystem::path& checkpoint_path) override;
     InferenceOutput infer(const torch::Tensor& observation, bool deterministic) override;
 

@@ -9,13 +9,14 @@ All commands are expected to run from repository root.
 - Ninja
 - C++20 compiler (GCC/Clang)
 - SQLite runtime/devel package (`libsqlite3-dev`)
-- Boost (`libboost-all-dev`) for optional backend build
 - Node.js 20+ for optional frontend
+- vcpkg (manifest mode)
 
-LibTorch CPU bootstrap:
+Bootstrap vcpkg once:
 
 ```bash
-bash tools/setup_libtorch_cpu.sh
+./tools/setup_vcpkg.sh
+export VCPKG_ROOT="$HOME/.vcpkg"
 ```
 
 ## Baseline Runtime (`nmc`)

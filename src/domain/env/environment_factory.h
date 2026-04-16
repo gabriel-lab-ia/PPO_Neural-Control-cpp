@@ -15,6 +15,7 @@ namespace nmc::domain::env {
 
 enum class EnvironmentKind {
     kPointMass,
+    kOrbitalSixDof,
     kMuJoCoCartPole
 };
 
@@ -25,6 +26,7 @@ std::string supported_environment_kinds();
 
 struct EnvironmentSpec {
     EnvironmentKind kind = EnvironmentKind::kPointMass;
+    std::optional<uint64_t> seed;
     std::optional<std::filesystem::path> mujoco_model_path;
     std::optional<PointMassRewardConfig> point_mass_reward;
 };
