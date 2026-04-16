@@ -46,7 +46,6 @@ Execution scope:
 </p>
 
 <p align="center">
-  <span style="display:inline-flex; margin:8px 10px;"><img alt="ci" src="https://img.shields.io/badge/ci-failing-DC2626?style=for-the-badge&amp;labelColor=333333&amp;color=DC2626&amp;logo=github&amp;logoColor=white" /></span>
   <span style="display:inline-flex; margin:8px 10px;"><img alt="CI Smoke Benchmark" src="https://img.shields.io/badge/CI-Smoke%20Benchmark-1F9D68?style=for-the-badge&amp;labelColor=333333&amp;color=1F9D68" /></span>
   <span style="display:inline-flex; margin:8px 10px;"><img alt="Baseline CPU Only" src="https://img.shields.io/badge/Baseline-CPU%20Only-9CA3AF?style=for-the-badge&amp;labelColor=333333&amp;color=9CA3AF" /></span>
 </p>
