@@ -1,7 +1,7 @@
 import type { EpisodeSummary } from "@/entities/episode/model/types";
 import type { OrbitPathPoint, Vector3 } from "@/entities/orbit/model/types";
 import type { ReplayFrame, ReplayRunDataset } from "@/entities/replay/model/types";
-import type { BenchmarkSummary, RunSummary } from "@/entities/run/model/types";
+import type { BenchmarkSummary, MissionEventSummary, RunSummary } from "@/entities/run/model/types";
 import type { TelemetrySample } from "@/entities/telemetry/model/types";
 import { DEFAULT_ENVIRONMENT } from "@/shared/config/replay";
 import { magnitude3 } from "@/shared/lib/math";
@@ -49,6 +49,7 @@ function createFrame(runId: string, step: number, phase: number): ReplayFrame {
     backend: "libtorch_cpu",
     deterministic: true,
     positionKm,
+    velocityKmS,
     controlVector: [
       controlMagnitude * Math.cos(theta),
       controlMagnitude * Math.sin(theta),
@@ -105,6 +106,7 @@ function createDataset(runId: string, label: string, phase: number): ReplayRunDa
   const run: RunSummary = {
     runId,
     label,
+    mode: "benchmark",
     environment: DEFAULT_ENVIRONMENT,
     backend: "libtorch_cpu",
     deterministic: true,
@@ -125,10 +127,28 @@ function createDataset(runId: string, label: string, phase: number): ReplayRunDa
     artifactStatus: "complete",
   };
 
+  const events: MissionEventSummary[] = [
+    {
+      id: 1,
+      eventType: "run.started",
+      level: "info",
+      message: "Replay dataset bootstrapped.",
+      timestampIso: frames[0]?.timestampIso ?? new Date().toISOString(),
+    },
+    {
+      id: 2,
+      eventType: "benchmark.completed",
+      level: "info",
+      message: "Deterministic smoke benchmark completed.",
+      timestampIso: frames[Math.max(0, frames.length - 1)]?.timestampIso ?? new Date().toISOString(),
+    },
+  ];
+
   return {
     run,
     benchmark,
     episodes: createEpisodes(frameCount),
+    events,
     frames,
     orbitPath: frames.map((frame) => frame.orbit),
   };

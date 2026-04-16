@@ -202,3 +202,66 @@ jobs:
           cmake --build build-core-arm64 --verbose
           file build-core-arm64/orbital_core_tests | tee /tmp/orbital_core_tests.file
           grep -E "aarch64|ARM aarch64" /tmp/orbital_core_tests.file
+
+  frontend-contract:
+    name: frontend-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: |
+          set -euxo pipefail
+          npm ci
+
+      - name: Frontend typecheck and build
+        working-directory: frontend
+        run: |
+          set -euxo pipefail
+          npm run typecheck
+          npm run build
+
+      - name: Validate OpenAPI required endpoints
+        run: |
+          set -euxo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          spec = Path("docs/openapi/orbital-api.yaml").read_text(encoding="utf-8")
+          required_paths = [
+              "/health",
+              "/version",
+              "/runs",
+              "/runs/{runId}",
+              "/runs/{runId}/summary",
+              "/runs/{runId}/telemetry",
+              "/runs/{runId}/telemetry/window",
+              "/runs/{runId}/events",
+              "/runs/{runId}/artifacts",
+              "/runs/{runId}/replay",
+              "/benchmarks",
+              "/benchmarks/{benchmarkId}",
+              "/train/jobs",
+              "/eval/jobs",
+              "/benchmark/jobs",
+              "/jobs/{jobId}",
+              "/config/presets",
+          ]
+          missing = [path for path in required_paths if path + ":" not in spec]
+          assert not missing, f"Missing OpenAPI paths: {missing}"
+
+          required_ws = ["/ws/telemetry/live", "/ws/runs/{runId}/stream"]
+          missing_ws = [path for path in required_ws if path not in spec]
+          assert not missing_ws, f"Missing websocket channels in OpenAPI: {missing_ws}"
+          PY

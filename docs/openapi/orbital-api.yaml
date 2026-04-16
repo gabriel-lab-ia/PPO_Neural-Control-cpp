@@ -1,0 +1,749 @@
+openapi: 3.1.0
+info:
+  title: Orbital Neural Control API
+  version: 0.4.0
+  description: |
+    REST and streaming contracts for mission runs, telemetry, replay, artifacts,
+    and orchestration jobs in Orbital Neural Control CPP.
+servers:
+  - url: http://localhost:8080
+    description: Local backend
+
+tags:
+  - name: system
+  - name: runs
+  - name: telemetry
+  - name: events
+  - name: artifacts
+  - name: replay
+  - name: benchmarks
+  - name: jobs
+  - name: config
+
+paths:
+  /health:
+    get:
+      tags: [system]
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service health
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeHealth'
+
+  /version:
+    get:
+      tags: [system]
+      operationId: getVersion
+      responses:
+        '200':
+          description: Service version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeVersion'
+
+  /runs:
+    get:
+      tags: [runs]
+      operationId: listRuns
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: Paginated runs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeRunList'
+
+  /runs/{runId}:
+    get:
+      tags: [runs]
+      operationId: getRun
+      parameters:
+        - $ref: '#/components/parameters/runId'
+      responses:
+        '200':
+          description: Run detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeRun'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /runs/{runId}/summary:
+    get:
+      tags: [runs]
+      operationId: getRunSummary
+      parameters:
+        - $ref: '#/components/parameters/runId'
+      responses:
+        '200':
+          description: Raw run summary JSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeAnyObject'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /runs/{runId}/telemetry:
+    get:
+      tags: [telemetry]
+      operationId: listRunTelemetry
+      parameters:
+        - $ref: '#/components/parameters/runId'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: Paginated telemetry points
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeTelemetryList'
+
+  /runs/{runId}/telemetry/window:
+    get:
+      tags: [telemetry]
+      operationId: getRunTelemetryWindow
+      parameters:
+        - $ref: '#/components/parameters/runId'
+        - $ref: '#/components/parameters/startStep'
+        - $ref: '#/components/parameters/endStep'
+        - $ref: '#/components/parameters/downsample'
+      responses:
+        '200':
+          description: Step-window telemetry response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeTelemetryList'
+
+  /runs/{runId}/events:
+    get:
+      tags: [events]
+      operationId: listRunEvents
+      parameters:
+        - $ref: '#/components/parameters/runId'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: Run events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeEventList'
+
+  /runs/{runId}/artifacts:
+    get:
+      tags: [artifacts]
+      operationId: listRunArtifacts
+      parameters:
+        - $ref: '#/components/parameters/runId'
+      responses:
+        '200':
+          description: Run artifacts under artifacts/runs/{runId}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeArtifactList'
+
+  /runs/{runId}/replay:
+    get:
+      tags: [replay]
+      operationId: getRunReplay
+      parameters:
+        - $ref: '#/components/parameters/runId'
+        - $ref: '#/components/parameters/startStep'
+        - $ref: '#/components/parameters/endStep'
+        - $ref: '#/components/parameters/downsample'
+      responses:
+        '200':
+          description: Replay payload containing run + telemetry + events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeReplay'
+
+  /benchmarks:
+    get:
+      tags: [benchmarks]
+      operationId: listBenchmarks
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: Paginated benchmarks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeBenchmarkList'
+
+  /benchmarks/{benchmarkId}:
+    get:
+      tags: [benchmarks]
+      operationId: getBenchmark
+      parameters:
+        - name: benchmarkId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Benchmark detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeBenchmark'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /train/jobs:
+    post:
+      tags: [jobs]
+      operationId: createTrainJob
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateJobRequest'
+      responses:
+        '202':
+          description: Job accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeJob'
+
+  /eval/jobs:
+    post:
+      tags: [jobs]
+      operationId: createEvalJob
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateJobRequest'
+      responses:
+        '202':
+          description: Job accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeJob'
+
+  /benchmark/jobs:
+    post:
+      tags: [jobs]
+      operationId: createBenchmarkJob
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateJobRequest'
+      responses:
+        '202':
+          description: Job accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeJob'
+
+  /jobs/{jobId}:
+    get:
+      tags: [jobs]
+      operationId: getJob
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeJob'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /config/presets:
+    get:
+      tags: [config]
+      operationId: getConfigPresets
+      responses:
+        '200':
+          description: Known config presets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvelopeConfigPresets'
+
+components:
+  parameters:
+    runId:
+      name: runId
+      in: path
+      required: true
+      schema:
+        type: string
+    limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 5000
+        default: 50
+    offset:
+      name: offset
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    startStep:
+      name: start_step
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    endStep:
+      name: end_step
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: -1
+    downsample:
+      name: downsample
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 10000
+        default: 1200
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+
+  schemas:
+    EnvelopeBase:
+      type: object
+      required: [status, timestamp]
+      properties:
+        status:
+          type: string
+          enum: [ok, error]
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          required: [error]
+          properties:
+            error:
+              type: object
+              required: [code, message, path]
+              properties:
+                code: { type: string }
+                message: { type: string }
+                path: { type: string }
+
+    EnvelopeHealth:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [service, status]
+              properties:
+                service: { type: string }
+                status: { type: string }
+
+    EnvelopeVersion:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [service, version, schema_version]
+              properties:
+                service: { type: string }
+                version: { type: string }
+                schema_version: { type: string }
+
+    Run:
+      type: object
+      required: [run_id, mode, environment, seed, started_at, status, artifact_dir]
+      properties:
+        run_id: { type: string }
+        mode: { type: string }
+        environment: { type: string }
+        seed: { type: integer }
+        started_at: { type: string, format: date-time }
+        ended_at: { type: [string, 'null'], format: date-time }
+        status: { type: string }
+        artifact_dir: { type: string }
+        config: { type: [object, 'null'], additionalProperties: true }
+        summary: { type: [object, 'null'], additionalProperties: true }
+
+    EnvelopeRun:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/Run'
+
+    EnvelopeRunList:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [limit, offset, count, items]
+              properties:
+                limit: { type: integer }
+                offset: { type: integer }
+                count: { type: integer }
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Run'
+
+    TelemetrySample:
+      type: object
+      required:
+        - step
+        - mission_time_s
+        - reward
+        - action
+        - value
+        - control_magnitude
+        - orbital_error_km
+        - velocity_magnitude_kmps
+        - policy_std
+        - position_km
+        - velocity_kmps
+        - control_vector
+        - terminated
+        - truncated
+        - timestamp
+      properties:
+        step: { type: integer }
+        mission_time_s: { type: number }
+        reward: { type: number }
+        action: { type: number }
+        value: { type: number }
+        control_magnitude: { type: number }
+        orbital_error_km: { type: number }
+        velocity_magnitude_kmps: { type: number }
+        policy_std: { type: number }
+        position_km:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items: { type: number }
+        velocity_kmps:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items: { type: number }
+        control_vector:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items: { type: number }
+        terminated: { type: boolean }
+        truncated: { type: boolean }
+        timestamp: { type: string, format: date-time }
+
+    EnvelopeTelemetryList:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [run_id, limit, offset, count, items]
+              properties:
+                run_id: { type: string }
+                limit: { type: integer }
+                offset: { type: integer }
+                count: { type: integer }
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TelemetrySample'
+
+    Event:
+      type: object
+      required: [id, run_id, level, event_type, message, created_at]
+      properties:
+        id: { type: integer }
+        run_id: { type: string }
+        level: { type: string }
+        event_type: { type: string }
+        message: { type: string }
+        payload: { type: [object, 'null'], additionalProperties: true }
+        created_at: { type: string, format: date-time }
+
+    EnvelopeEventList:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [run_id, count, items]
+              properties:
+                run_id: { type: string }
+                count: { type: integer }
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Event'
+
+    Artifact:
+      type: object
+      required: [name, path, type, size_bytes]
+      properties:
+        name: { type: string }
+        path: { type: string }
+        type: { type: string }
+        size_bytes: { type: integer }
+
+    EnvelopeArtifactList:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [run_id, count, items]
+              properties:
+                run_id: { type: string }
+                count: { type: integer }
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Artifact'
+
+    Benchmark:
+      type: object
+      required: [benchmark_id, benchmark_name, summary, created_at]
+      properties:
+        benchmark_id: { type: integer }
+        benchmark_name: { type: string }
+        run_id: { type: [string, 'null'] }
+        summary: { type: [object, 'null'], additionalProperties: true }
+        created_at: { type: string, format: date-time }
+
+    EnvelopeBenchmark:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/Benchmark'
+
+    EnvelopeBenchmarkList:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [limit, offset, count, items]
+              properties:
+                limit: { type: integer }
+                offset: { type: integer }
+                count: { type: integer }
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Benchmark'
+
+    ReplayPayload:
+      type: object
+      required: [run_id, telemetry, events]
+      properties:
+        run_id: { type: string }
+        run:
+          oneOf:
+            - $ref: '#/components/schemas/Run'
+            - type: 'null'
+        telemetry:
+          type: array
+          items:
+            $ref: '#/components/schemas/TelemetrySample'
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+
+    EnvelopeReplay:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/ReplayPayload'
+
+    CreateJobRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        run_id: { type: string }
+        seed: { type: integer }
+        quick: { type: boolean }
+
+    Job:
+      type: object
+      required: [job_id, job_type, status, run_id, created_at, updated_at]
+      properties:
+        job_id: { type: string }
+        job_type:
+          type: string
+          enum: [train, eval, benchmark]
+        status:
+          type: string
+          enum: [queued, running, completed, failed]
+        run_id: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        details: { type: [object, 'null'], additionalProperties: true }
+
+    EnvelopeJob:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/Job'
+
+    ConfigPreset:
+      type: object
+      required: [name, mode, description, arguments]
+      properties:
+        name: { type: string }
+        mode: { type: string }
+        description: { type: string }
+        arguments: { type: object, additionalProperties: true }
+
+    EnvelopeConfigPresets:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [presets]
+              properties:
+                presets:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ConfigPreset'
+
+    EnvelopeAnyObject:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          properties:
+            data:
+              type: object
+              additionalProperties: true
+
+  x-schemas:
+    WsEnvelopeBase:
+      type: object
+      required: [type, schema_version, timestamp, source, run_id, payload]
+      properties:
+        type: { type: string }
+        schema_version: { type: string }
+        timestamp: { type: string, format: date-time }
+        source: { type: string }
+        run_id: { type: string }
+        payload: { type: object, additionalProperties: true }
+
+    TelemetryEnvelope:
+      allOf:
+        - $ref: '#/components/x-schemas/WsEnvelopeBase'
+        - type: object
+          properties:
+            type:
+              const: telemetry.sample
+            payload:
+              $ref: '#/components/schemas/TelemetrySample'
+
+    ReplayChunkEnvelope:
+      allOf:
+        - $ref: '#/components/x-schemas/WsEnvelopeBase'
+        - type: object
+          properties:
+            type:
+              const: replay.chunk
+            payload:
+              type: object
+              required: [chunk_index, total_chunks, samples]
+              properties:
+                chunk_index: { type: integer }
+                total_chunks: { type: integer }
+                samples:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TelemetrySample'
+
+    MissionEventEnvelope:
+      allOf:
+        - $ref: '#/components/x-schemas/WsEnvelopeBase'
+        - type: object
+          properties:
+            type:
+              const: mission.event
+            payload:
+              type: object
+              additionalProperties: true
+
+x-websocket-channels:
+  - path: /ws/telemetry/live
+    direction: server->client
+    messages:
+      - $ref: '#/components/x-schemas/TelemetryEnvelope'
+      - $ref: '#/components/x-schemas/MissionEventEnvelope'
+  - path: /ws/runs/{runId}/stream
+    direction: server->client
+    messages:
+      - $ref: '#/components/x-schemas/ReplayChunkEnvelope'
+      - $ref: '#/components/x-schemas/MissionEventEnvelope'

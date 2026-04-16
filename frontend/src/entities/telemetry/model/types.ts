@@ -10,8 +10,12 @@ export interface TelemetrySample {
   orbitalErrorKm: number;
   velocityMagnitudeKmS: number;
   policyStd: number;
-  backend: "libtorch_cpu";
+  backend: string;
   deterministic: boolean;
   positionKm: Vector3;
+  velocityKmS: Vector3;
   controlVector: Vector3;
+  terminated?: boolean;
+  truncated?: boolean;
+  timestampIso?: string;
 }

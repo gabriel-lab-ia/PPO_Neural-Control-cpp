@@ -1,6 +1,6 @@
 # Build and Run Guide
 
-This document describes the supported local and CI-equivalent build flows for **Orbital Neural Control CPP**.
+All commands are expected to run from repository root.
 
 ## Prerequisites
 
@@ -9,35 +9,87 @@ This document describes the supported local and CI-equivalent build flows for **
 - Ninja
 - C++20 compiler (GCC/Clang)
 - SQLite runtime/devel package (`libsqlite3-dev`)
+- Boost (`libboost-all-dev`) for optional backend build
+- Node.js 20+ for optional frontend
 
-LibTorch CPU is bootstrapped with:
+LibTorch CPU bootstrap:
 
 ```bash
 bash tools/setup_libtorch_cpu.sh
 ```
 
-## Baseline Configure and Build
+## Baseline Runtime (`nmc`)
+
+Configure + build:
 
 ```bash
-cd <repo-root>
 cmake --preset dev
 cmake --build --preset build
 ./build/nmc help
 ```
 
-Binary:
+Smoke benchmark:
 
 ```bash
-./build/nmc
+./build/nmc benchmark --quick --name smoke_local --seed 7
 ```
 
-## CI-Equivalent Local Flow
+Train/eval quick validation:
 
 ```bash
-cd <repo-root>
+./build/nmc train --quick --run-id train_quick_001 --seed 7
+./build/nmc eval --checkpoint artifacts/latest/checkpoint.pt --episodes 10 --backend libtorch --run-id eval_local_001 --seed 7
+```
+
+## Optional Backend
+
+```bash
+cmake --preset orbital-stack
+cmake --build --preset build-orbital-backend
+./build-orbital/backend/orbital_backend
+```
+
+Environment variables:
+
+- `ORBITAL_BACKEND_PORT` (default `8080`)
+- `ORBITAL_ARTIFACT_ROOT` (default `artifacts`)
+- `ORBITAL_SQLITE_PATH` (default `artifacts/experiments.sqlite`)
+- `ORBITAL_REPO_ROOT` (default current directory)
+- `ORBITAL_JOB_EXECUTOR=1` to allow backend-submitted jobs to execute `nmc`
+
+## Optional Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Validation:
+
+```bash
+npm run typecheck
+npm run build
+```
+
+Default backend URLs (override with env):
+
+- `VITE_BACKEND_HTTP=http://localhost:8080`
+- `VITE_BACKEND_WS=ws://localhost:8080`
+
+## Docker Compose (Optional Stack)
+
+```bash
+docker compose up --build -d mlflow backend frontend
+docker compose run --rm training
+docker compose logs -f mlflow backend frontend
+```
+
+## CI-equivalent Baseline Path
+
+```bash
 cmake --preset ci
 cmake --build --preset build-ci
-./build-ci/nmc help
 ctest --test-dir build-ci --output-on-failure --verbose -R nmc_smoke_benchmark
 ```
 
@@ -46,56 +98,4 @@ Expected smoke artifacts:
 - `artifacts/benchmarks/latest.json`
 - `artifacts/latest/manifest.json`
 - `artifacts/latest/checkpoint.pt`
-
-## Optional Presets
-
-Debug + sanitizers:
-
-```bash
-cmake --preset debug-sanitized
-cmake --build --preset build-debug
-```
-
-Orbital core targets:
-
-```bash
-cmake --preset orbital-core-only
-cmake --build --preset build-orbital
-```
-
-Backend target (requires Boost):
-
-```bash
-cmake --preset orbital-stack
-cmake --build --preset build-orbital-backend
-```
-
-## Runtime Commands
-
-Train:
-
-```bash
-./build/nmc train --env point_mass --seed 7 --updates 30 --run-id train_local_001
-```
-
-Evaluate:
-
-```bash
-./build/nmc eval --checkpoint artifacts/latest/checkpoint.pt --episodes 10 --backend libtorch --run-id eval_local_001
-```
-
-Benchmark:
-
-```bash
-./build/nmc benchmark --quick --name smoke_local --seed 7
-```
-
-## Optional Feature Flags
-
-- `NMC_ENABLE_MUJOCO=ON`: enable MuJoCo environment adapter (requires local MuJoCo install)
-- `NMC_BUILD_ORBITAL_BACKEND=ON`: build telemetry backend target
-- `NMC_BUILD_ORBITAL_CORE=ON`: build orbital core library/tests/benchmarks
-
-TensorRT remains a stub path and is intentionally disabled in the baseline.
-
-The `backend/`, `frontend/`, and `mlops/` folders are optional integration tracks and are not required for baseline runtime validation.
+- `artifacts/experiments.sqlite`

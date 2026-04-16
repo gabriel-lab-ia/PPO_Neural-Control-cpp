@@ -2,41 +2,40 @@
 
 ## Implemented Baseline
 
-- CPU-first PPO `nmc` CLI in C++20 + LibTorch.
-- Layered runtime architecture under `src/`.
-- Reproducible run artifacts with manifests, checkpoints, and benchmark reports.
-- SQLite persistence for runs, episodes, events, and benchmark summaries.
-- Optional MuJoCo adapter path, disabled by default.
-- Inference backend abstraction with active LibTorch backend and TensorRT stub.
-- CI baseline with configure/build/smoke benchmark/artifact checks.
-- Optional integration modules for telemetry/backend/frontend and MLOps workflows.
+- CPU-first PPO runtime (`nmc`) in C++20 + LibTorch.
+- Layered runtime boundaries under `src/`.
+- Reproducible `train`, `eval`, `benchmark` artifacts and manifests.
+- SQLite persistence with run/episode/event/benchmark contracts and extended forward-compatible tables.
+- Deterministic smoke benchmark path in CI.
+- Optional backend API with OpenAPI contract and WebSocket replay envelopes.
+- Optional frontend mission console with typed API client and 3D orbital replay UX.
 
-## Next 30 Days
+## Near-term (30 days)
 
-1. Add `--config <json>` ingestion to `nmc` with deterministic override precedence.
-2. Add focused unit tests for artifact schema and SQLite invariants.
-3. Add benchmark regression thresholds (return floor + latency ceiling).
-4. Improve benchmark report schema with environment/runtime metadata.
-5. Wire run-to-MLflow URI linkage into run manifest metadata.
+1. Add first-class config file ingestion (`--config`) with deterministic override precedence.
+2. Add benchmark regression thresholds (reward floor + runtime budget).
+3. Add backend API integration tests and OpenAPI contract validation in CI.
+4. Add frontend replay virtualization for very large mission histories.
+5. Add stronger replay snapshot caching strategy for sub-second reloads.
 
-## Next 90 Days
+## Mid-term (90 days)
 
-1. Introduce richer orbital dynamics interfaces (toward 6DOF environment adapters).
-2. Add standardized RL vs LQR/PID comparison harness with confidence intervals.
-3. Add control-safety checks (actuation limits, trajectory divergence flags, residual bounds).
-4. Add ARM profiling scripts focused on deterministic inference latency.
-5. Add LibTorch vs ONNX parity tests for deployment contracts.
+1. Introduce richer orbital dynamics interfaces (toward 6DOF adapters).
+2. Add standardized PPO vs LQR/PID comparison harness with confidence intervals.
+3. Expand safety telemetry (corridor violations, control saturation, divergence alarms).
+4. Add ARM-focused deterministic inference profiling.
+5. Add LibTorch vs ONNX inference parity checks.
 
-## Long-Term Direction
+## Long-term Direction
 
-1. Mission objective packs (station-keeping, rendezvous, collision avoidance).
-2. Hierarchical policy structure for tactical vs strategic orbital maneuvers.
-3. Deeper control-theoretic validation and stability evidence workflows.
-4. Optional TensorRT integration with strict parity and fallback mechanisms.
-5. Mission replay and audit tooling integrated with telemetry/event persistence.
+1. Mission objective packs (station-keeping, rendezvous, collision-avoidance).
+2. Hierarchical control policies for tactical vs strategic maneuvers.
+3. Stronger control-theoretic validation and auditability workflows.
+4. Optional TensorRT path with strict parity gates and fallback.
+5. Hardware-in-the-loop replay and mission certification tracks.
 
 ## Deferred by Design
 
-- CUDA acceleration in baseline path.
-- Active TensorRT runtime dependency.
-- Distributed training infrastructure before dynamics fidelity justifies it.
+- CUDA acceleration in baseline path
+- active TensorRT dependency in default CI path
+- distributed training infrastructure before dynamics fidelity maturity

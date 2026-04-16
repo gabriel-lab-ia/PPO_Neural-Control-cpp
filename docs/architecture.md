@@ -1,99 +1,61 @@
 # Architecture Overview
 
-Orbital Neural Control CPP has one official runtime baseline and several optional expansion modules.
+Orbital Neural Control CPP is intentionally split into:
 
-## 1) Official Runtime Baseline (`src/`)
+1. **baseline runtime** (`src/`) with strict CI guarantees
+2. **optional platform modules** (`backend`, `frontend`, `mlops`, `core/control/sim/rl`)
 
-The baseline executable is `nmc` and is built from `src/` only.
-This is the only runtime contract currently required to pass CI.
+## 1) Baseline Runtime (`src/`)
 
-Layering:
+The official executable baseline is `nmc`.
 
-- `src/domain/`
-  - `ppo/`: policy/value model and PPO trainer implementation.
-  - `env/`: environment interface and environment factory.
-  - `inference/`: backend abstraction (`libtorch` active, TensorRT stub).
-  - `config/`: typed train/eval/benchmark configs and JSON helpers.
-- `src/application/`
-  - `TrainingRunner`, `EvaluationRunner`, `BenchmarkRunner` orchestration.
-- `src/infrastructure/`
-  - `artifacts/`: run layout, manifests, checkpoint lifecycle.
-  - `persistence/`: SQLite persistence (`runs`, `episodes`, `events`, `benchmarks`).
-  - `reporting/`: CSV and rollout reporting.
-- `src/interfaces/`
-  - CLI parsing + commands (`train`, `eval`, `benchmark`).
-- `src/common/`
-  - JSON escaping, time, and run-id helpers.
+Layer boundaries:
 
-This is the path validated in CI and used as the reproducible CPU-first contract.
+- `domain/`
+  - PPO stack, env interfaces, inference backend abstraction, typed config
+- `application/`
+  - orchestration runners (`TrainingRunner`, `EvaluationRunner`, `BenchmarkRunner`)
+- `infrastructure/`
+  - artifacts, checkpoint lifecycle, SQLite persistence, reporting
+- `interfaces/`
+  - CLI contract (`train`, `eval`, `benchmark`)
+- `common/`
+  - time and JSON utility primitives
 
-Build options are intentionally prefixed with `NMC_*` to match the stable runtime contract name (`nmc`).
+Design intent: deterministic control workflows with explicit artifact and persistence outputs.
 
-## 2) Expansion Modules (Optional)
+## 2) Optional Platform Stack
 
-These modules are intentionally separated from the baseline runtime so they can evolve without destabilizing `nmc`.
+### Backend (`backend/`)
 
-- `core/`: orbital dynamics/control kernel and deterministic mission rollout API.
-- `control/`: baseline LQR/PID controllers for comparison benchmarks.
-- `sim/`: perturbation/disturbance model interfaces.
-- `rl/`: runtime-mode and reproducibility primitives.
-- `training/`: Python orchestration and pybind11 binding.
-- `mlops/`: MLflow tracking, ONNX export, model registration scripts.
-- `backend/`: C++ REST/WebSocket telemetry service.
-- `frontend/`: React + TypeScript + Vite mission dashboard prototype.
+Layered backend modules:
 
-These modules are useful for integration and future productization, but they are not required to build or validate the baseline runtime.
+- `common/`
+- `domain/`
+- `persistence/`
+- `telemetry/`
+- `replay/`
+- `application/`
+- `transport/`
 
-## 3) Artifact and Persistence Contract
+The backend reads persisted artifacts and SQLite data; it does not own the PPO simulation loop.
 
-```text
-artifacts/
-  runs/<run_id>/
-    manifest.json
-    training_metrics.csv
-    training_summary.json
-    evaluation_summary.json
-    live_rollout.csv
-    checkpoints/policy_last.pt
-    checkpoints/policy_last.meta
-  latest/
-    manifest.json
-    training_metrics.csv
-    checkpoint.pt
-    checkpoint.meta
-  benchmarks/
-    latest.json
-    latest.csv
-  checkpoints/
-  reports/
-  experiments.sqlite
-```
+### Frontend (`frontend/`)
 
-SQLite tables:
+- React + TypeScript + Vite
+- typed client generated from OpenAPI contract
+- mission replay and live stream UX over REST + WebSocket
 
-- `runs`
-- `episodes`
-- `events`
-- `benchmarks`
+## 3) Data and Contracts
 
-## 4) Execution Flows
+- OpenAPI contract: `docs/openapi/orbital-api.yaml`
+- Replay flow: `docs/replay/mission-replay.md`
+- System dataflow: `docs/architecture/system-dataflow.md`
+- SQLite schema and indexes: `docs/database/sqlite-telemetry.md`
 
-Baseline CLI:
+## 4) Why This Separation Exists
 
-- `./build/nmc train ...`
-- `./build/nmc eval ...`
-- `./build/nmc benchmark --quick ...`
-
-Optional MLOps:
-
-- `python3 mlops/train_with_mlflow.py ...`
-
-Optional telemetry demo:
-
-- `docker compose up --build -d mlflow backend frontend`
-
-## 5) Build-Time Guardrails
-
-- MuJoCo remains optional: `NMC_ENABLE_MUJOCO=ON` only when explicitly enabled.
-- TensorRT backend remains a stub and is not a required dependency.
-- Baseline CI path is CPU-only and validates artifact generation.
+- keeps baseline runtime credible and reproducible
+- allows optional modules to evolve without destabilizing `nmc`
+- keeps backend/frontend/API contract-driven instead of ad hoc
+- supports deterministic benchmark evidence and replayability

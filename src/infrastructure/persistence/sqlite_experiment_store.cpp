@@ -105,6 +105,7 @@ void SQLiteExperimentStore::initialize() {
     );
 
     execute("CREATE INDEX IF NOT EXISTS idx_episodes_run ON episodes(run_id);");
+    execute("CREATE INDEX IF NOT EXISTS idx_episodes_run_phase_episode ON episodes(run_id, phase, episode_index);");
 
     execute(
         "CREATE TABLE IF NOT EXISTS events ("
@@ -120,6 +121,7 @@ void SQLiteExperimentStore::initialize() {
     );
 
     execute("CREATE INDEX IF NOT EXISTS idx_events_run ON events(run_id);");
+    execute("CREATE INDEX IF NOT EXISTS idx_events_run_created ON events(run_id, created_at);");
 
     execute(
         "CREATE TABLE IF NOT EXISTS benchmarks ("
@@ -130,6 +132,62 @@ void SQLiteExperimentStore::initialize() {
         "  created_at TEXT NOT NULL"
         ");"
     );
+    execute("CREATE INDEX IF NOT EXISTS idx_benchmarks_name_created ON benchmarks(benchmark_name, created_at);");
+    execute("CREATE INDEX IF NOT EXISTS idx_runs_started_at ON runs(started_at);");
+
+    execute(
+        "CREATE TABLE IF NOT EXISTS telemetry_samples ("
+        "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "  run_id TEXT NOT NULL,"
+        "  episode_index INTEGER NOT NULL DEFAULT 0,"
+        "  step INTEGER NOT NULL,"
+        "  mission_time_s REAL NOT NULL,"
+        "  reward REAL NOT NULL,"
+        "  control REAL,"
+        "  value_estimate REAL,"
+        "  sample_json TEXT NOT NULL,"
+        "  created_at TEXT NOT NULL,"
+        "  FOREIGN KEY(run_id) REFERENCES runs(run_id)"
+        ");"
+    );
+    execute("CREATE INDEX IF NOT EXISTS idx_telemetry_run_step ON telemetry_samples(run_id, step);");
+    execute("CREATE INDEX IF NOT EXISTS idx_telemetry_run_time ON telemetry_samples(run_id, mission_time_s);");
+
+    execute(
+        "CREATE TABLE IF NOT EXISTS run_artifacts ("
+        "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "  run_id TEXT NOT NULL,"
+        "  artifact_type TEXT NOT NULL,"
+        "  path TEXT NOT NULL,"
+        "  checksum TEXT,"
+        "  bytes INTEGER,"
+        "  created_at TEXT NOT NULL,"
+        "  FOREIGN KEY(run_id) REFERENCES runs(run_id)"
+        ");"
+    );
+    execute("CREATE INDEX IF NOT EXISTS idx_run_artifacts_run_type ON run_artifacts(run_id, artifact_type);");
+
+    execute(
+        "CREATE TABLE IF NOT EXISTS run_configs ("
+        "  run_id TEXT PRIMARY KEY,"
+        "  config_json TEXT NOT NULL,"
+        "  created_at TEXT NOT NULL,"
+        "  FOREIGN KEY(run_id) REFERENCES runs(run_id)"
+        ");"
+    );
+
+    execute(
+        "CREATE TABLE IF NOT EXISTS model_registry_refs ("
+        "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "  run_id TEXT NOT NULL,"
+        "  backend TEXT NOT NULL,"
+        "  uri TEXT NOT NULL,"
+        "  tag TEXT,"
+        "  created_at TEXT NOT NULL,"
+        "  FOREIGN KEY(run_id) REFERENCES runs(run_id)"
+        ");"
+    );
+    execute("CREATE INDEX IF NOT EXISTS idx_model_registry_refs_run_backend ON model_registry_refs(run_id, backend);");
 }
 
 void SQLiteExperimentStore::insert_run_start(const RunStart& run) {

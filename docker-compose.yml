@@ -19,6 +19,12 @@ services:
       dockerfile: docker/Dockerfile.backend
     environment:
       ORBITAL_BACKEND_PORT: "8080"
+      ORBITAL_ARTIFACT_ROOT: "/workspace/artifacts"
+      ORBITAL_SQLITE_PATH: "/workspace/artifacts/experiments.sqlite"
+      ORBITAL_REPO_ROOT: "/workspace"
+      ORBITAL_JOB_EXECUTOR: "0"
+    volumes:
+      - ./artifacts:/workspace/artifacts:rw
     ports:
       - "8080:8080"
 

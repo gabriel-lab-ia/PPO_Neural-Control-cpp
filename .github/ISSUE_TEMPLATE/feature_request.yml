@@ -1,0 +1,38 @@
+name: Feature request
+description: Propose an engineering improvement with clear scope and validation path.
+title: "feat: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What limitation exists today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Change
+      description: Concrete technical proposal.
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact and Tradeoffs
+      description: Determinism/performance/complexity implications.
+
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation Plan
+      description: Exact commands/tests expected for acceptance.
+      placeholder: |
+        - cmake --preset ci
+        - cmake --build --preset build-ci
+        - ctest --test-dir build-ci -R nmc_smoke_benchmark
+        - frontend npm run typecheck && npm run build

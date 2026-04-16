@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
 
-import { MISSION_REPLAY_DATASETS } from "@/shared/mock/mission-replay.mock";
+import { useRunsQuery } from "@/shared/api/hooks/use-runs-query";
 import { Panel, PanelBody, PanelHeader, PanelTitle } from "@/shared/ui/panel";
 
 export function RunExplorerPage(): JSX.Element {
+  const { runs, loading, error } = useRunsQuery(300);
+
   return (
     <main className="mission-shell">
       <div className="mission-shell__gradient" />
@@ -21,35 +23,48 @@ export function RunExplorerPage(): JSX.Element {
           </Link>
         </header>
 
+        {error ? (
+          <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+            Backend unavailable ({error}). Showing empty registry.
+          </div>
+        ) : null}
+
         <Panel>
           <PanelHeader>
             <PanelTitle>Available Runs</PanelTitle>
           </PanelHeader>
           <PanelBody className="overflow-x-auto">
-            <table className="w-full min-w-[760px] border-collapse text-left text-sm text-slate-200">
+            <table className="w-full min-w-[920px] border-collapse text-left text-sm text-slate-200">
               <thead>
                 <tr className="border-b border-slate-700/70 text-[11px] uppercase tracking-[0.14em] text-slate-400">
                   <th className="py-2 pr-3">run_id</th>
-                  <th className="py-2 pr-3">label</th>
+                  <th className="py-2 pr-3">mode</th>
                   <th className="py-2 pr-3">environment</th>
-                  <th className="py-2 pr-3">timesteps</th>
-                  <th className="py-2 pr-3">backend</th>
-                  <th className="py-2 pr-3">deterministic</th>
-                  <th className="py-2 pr-3">artifact status</th>
+                  <th className="py-2 pr-3">seed</th>
+                  <th className="py-2 pr-3">status</th>
+                  <th className="py-2 pr-3">started_at</th>
+                  <th className="py-2 pr-3">artifact_dir</th>
                 </tr>
               </thead>
               <tbody>
-                {MISSION_REPLAY_DATASETS.map((dataset) => (
-                  <tr key={dataset.run.runId} className="border-b border-slate-800/70">
-                    <td className="py-2 pr-3 font-medium text-cyan-100">{dataset.run.runId}</td>
-                    <td className="py-2 pr-3">{dataset.run.label}</td>
-                    <td className="py-2 pr-3">{dataset.run.environment}</td>
-                    <td className="py-2 pr-3">{dataset.run.totalTimesteps}</td>
-                    <td className="py-2 pr-3">{dataset.run.backend}</td>
-                    <td className="py-2 pr-3">{dataset.run.deterministic ? "yes" : "no"}</td>
-                    <td className="py-2 pr-3">{dataset.run.artifactStatus}</td>
+                {runs.map((run) => (
+                  <tr key={run.run_id} className="border-b border-slate-800/70">
+                    <td className="py-2 pr-3 font-medium text-cyan-100">{run.run_id}</td>
+                    <td className="py-2 pr-3">{run.mode}</td>
+                    <td className="py-2 pr-3">{run.environment}</td>
+                    <td className="py-2 pr-3">{run.seed}</td>
+                    <td className="py-2 pr-3">{run.status}</td>
+                    <td className="py-2 pr-3">{run.started_at}</td>
+                    <td className="py-2 pr-3">{run.artifact_dir}</td>
                   </tr>
                 ))}
+                {!loading && runs.length === 0 ? (
+                  <tr>
+                    <td className="py-3 text-slate-400" colSpan={7}>
+                      No runs found.
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </PanelBody>

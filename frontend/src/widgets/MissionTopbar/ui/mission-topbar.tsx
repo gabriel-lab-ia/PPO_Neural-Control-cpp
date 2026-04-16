@@ -42,16 +42,16 @@ export function MissionTopbar({ runs, selectedRun, onSelectRun }: MissionTopbarP
             <p className="mt-1 text-sm font-medium text-slate-100">{selectedRun.runId}</p>
           </div>
           <div className="rounded-xl border border-slate-700/70 bg-slate-950/45 px-3 py-2">
+            <p className="text-[11px] uppercase tracking-[0.14em] text-slate-400">mode</p>
+            <p className="mt-1 text-sm font-medium text-slate-100">{selectedRun.mode}</p>
+          </div>
+          <div className="rounded-xl border border-slate-700/70 bg-slate-950/45 px-3 py-2">
             <p className="text-[11px] uppercase tracking-[0.14em] text-slate-400">environment</p>
             <p className="mt-1 text-sm font-medium text-slate-100">{selectedRun.environment}</p>
           </div>
           <div className="rounded-xl border border-slate-700/70 bg-slate-950/45 px-3 py-2">
             <p className="text-[11px] uppercase tracking-[0.14em] text-slate-400">backend</p>
             <p className="mt-1 text-sm font-medium text-slate-100">{selectedRun.backend}</p>
-          </div>
-          <div className="rounded-xl border border-slate-700/70 bg-slate-950/45 px-3 py-2">
-            <p className="text-[11px] uppercase tracking-[0.14em] text-slate-400">timesteps</p>
-            <p className="mt-1 text-sm font-medium text-slate-100">{selectedRun.totalTimesteps}</p>
           </div>
         </div>
       </section>
