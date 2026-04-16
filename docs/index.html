@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Neuro Motor CPP</title>
+  <title>Orbital Neural Control CPP</title>
   <style>
     :root {
-      --bg: #07111a;
-      --panel: rgba(11, 20, 32, 0.82);
-      --text: #edf4fb;
-      --muted: #9db3c8;
-      --line: rgba(255, 255, 255, 0.1);
-      --accent: #7cf0b7;
-      --accent-2: #5cb8ff;
+      --bg: #060e18;
+      --panel: rgba(12, 21, 34, 0.86);
+      --text: #e9f1fb;
+      --muted: #97afc8;
+      --line: rgba(255, 255, 255, 0.12);
+      --accent: #63c8ff;
+      --accent-2: #78efc0;
     }
     * { box-sizing: border-box; }
     body {
@@ -20,124 +20,129 @@
       font-family: "DejaVu Sans", system-ui, sans-serif;
       color: var(--text);
       background:
-        radial-gradient(circle at top left, rgba(91, 166, 255, 0.18), transparent 30%),
-        radial-gradient(circle at bottom right, rgba(124, 240, 183, 0.14), transparent 28%),
-        linear-gradient(180deg, #040912 0%, #07111a 100%);
+        radial-gradient(circle at 10% 0%, rgba(99, 200, 255, 0.16), transparent 35%),
+        radial-gradient(circle at 85% 20%, rgba(120, 239, 192, 0.12), transparent 32%),
+        linear-gradient(180deg, #040912 0%, #060e18 100%);
     }
     main {
       max-width: 1120px;
       margin: 0 auto;
-      padding: 48px 24px 72px;
+      padding: 42px 20px 64px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 24px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 16px 38px rgba(0, 0, 0, 0.24);
     }
     .hero {
       display: grid;
       grid-template-columns: 1.2fr 0.8fr;
-      gap: 24px;
+      gap: 20px;
       align-items: stretch;
     }
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 24px;
-      padding: 24px;
-      backdrop-filter: blur(14px);
-      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24);
+    .meta {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.10em;
+      color: var(--accent-2);
+      margin-bottom: 12px;
     }
     h1 {
       margin: 0 0 12px;
-      font-size: clamp(34px, 5vw, 56px);
-      line-height: 1.05;
+      font-size: clamp(30px, 4.5vw, 52px);
+      line-height: 1.08;
     }
+    h2 { margin: 0 0 12px; }
     p {
-      color: var(--muted);
-      line-height: 1.6;
       margin: 0 0 14px;
+      color: var(--muted);
+      line-height: 1.62;
     }
-    .links {
+    .buttons {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 20px;
+      gap: 10px;
+      margin-top: 18px;
     }
-    a.button {
+    a.btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 11px 16px;
-      border-radius: 999px;
       text-decoration: none;
       color: var(--text);
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 14px;
     }
-    a.button.primary {
-      background: linear-gradient(135deg, var(--accent-2), var(--accent));
-      color: #04121b;
-      font-weight: 700;
+    a.btn.primary {
+      color: #03131f;
       border: 0;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
     }
     .grid {
+      margin-top: 18px;
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 18px;
-      margin-top: 22px;
+      gap: 16px;
     }
-    .meta {
-      font-size: 13px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 14px;
+    .title-sm {
+      margin: 0 0 10px;
+      font-size: 16px;
+      color: #d9e7f7;
     }
-    .signature {
-      margin-top: 26px;
-      font-size: 12px;
-      color: var(--muted);
+    code {
+      color: #b7f1d6;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      padding: 1px 6px;
     }
-    @media (max-width: 900px) {
-      .hero, .grid {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 920px) {
+      .hero, .grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
   <main>
     <section class="hero">
-      <div class="card">
-        <div class="meta">C++ • PPO • RL • MuJoCo • HTML</div>
-        <h1>Neuro Motor CPP</h1>
-        <p>A formal C++ reinforcement learning project centered on PPO, MuJoCo simulation, metric exports, and a browser-based 3D neural-network viewer.</p>
-        <p>This site is the static publishing surface for the repository demo. It provides direct access to the trained-policy visualization, benchmark summary, and exported artifacts.</p>
-        <div class="links">
-          <a class="button primary" href="./demo/neural_network_3d.html">Open 3D Neural Viewer</a>
-          <a class="button" href="./demo/learning_curve.svg">Open Learning Curve</a>
-          <a class="button" href="./demo/benchmark_summary.json">Download Benchmark JSON</a>
-          <a class="button" href="./demo/live_rollout.csv">Download Live Rollout CSV</a>
-          <a class="button" href="./demo/neural_network_3d.json">Download Viewer JSON</a>
-          <a class="button" href="https://github.com/gabriel-lab-ia/PPO_Neural-Control-cpp">Open GitHub Repository</a>
+      <article class="panel">
+        <div class="meta">C++20 • PPO • Orbital Autonomy • Systems Engineering</div>
+        <h1>Orbital Neural Control CPP</h1>
+        <p>CPU-first reinforcement learning systems baseline for orbital control research and engineering. The active CLI runtime provides reproducible <code>train</code>, <code>eval</code>, and <code>benchmark</code> flows with structured artifacts and SQLite persistence.</p>
+        <p>Optional tracks include MLflow/ONNX MLOps, telemetry backend streaming, and a Next.js mission dashboard. These are expansion modules, not hidden baseline requirements.</p>
+        <div class="buttons">
+          <a class="btn primary" href="https://github.com/gabriel-lab-ia/Orbital-Neural-Control-CPP">Open Repository</a>
+          <a class="btn" href="./architecture.md">Architecture</a>
+          <a class="btn" href="./roadmap.md">Roadmap</a>
+          <a class="btn" href="./uml/component-diagram.md">UML</a>
         </div>
-      </div>
-      <div class="card">
-        <h2>Project Focus</h2>
-        <p>PPO is implemented in modern C++ using LibTorch, with a clean environment abstraction that supports a default baseline and optional MuJoCo backends.</p>
-        <p>The viewer exposes policy structure, connection weights, and sampled live activations in a standalone HTML artifact suitable for static hosting, now with touch-friendly controls for mobile devices.</p>
-        <p class="signature">feito por Gabriel Arantes</p>
-      </div>
+      </article>
+      <article class="panel">
+        <h2>Baseline Contracts</h2>
+        <p>Primary binary: <code>./build/nmc</code></p>
+        <p>CI validates configure, build, smoke benchmark, and artifact generation on Linux x86_64.</p>
+        <p>Core artifacts: <code>artifacts/latest/manifest.json</code>, <code>artifacts/latest/checkpoint.pt</code>, <code>artifacts/benchmarks/latest.json</code>.</p>
+      </article>
     </section>
+
     <section class="grid">
-      <div class="card">
-        <h3>Training Core</h3>
-        <p>Rollout collection, generalized advantage estimation, PPO clipping, entropy preservation, and critic stabilization are implemented in C++ and exported through reproducible metric logs.</p>
-      </div>
-      <div class="card">
-        <h3>MuJoCo Integration</h3>
-        <p>The repository includes a MuJoCo cart-pole adapter and local XML assets, making it straightforward to extend toward richer control benchmarks.</p>
-      </div>
-      <div class="card">
-        <h3>Web Visualization</h3>
-        <p>The demo artifacts are static and browser-friendly, with direct desktop and mobile interaction, which makes GitHub Pages a practical zero-backend publishing path.</p>
-      </div>
+      <article class="panel">
+        <h3 class="title-sm">Layered Runtime</h3>
+        <p><code>src/domain</code>, <code>src/application</code>, <code>src/infrastructure</code>, <code>src/interfaces</code>, <code>src/common</code>.</p>
+      </article>
+      <article class="panel">
+        <h3 class="title-sm">Persistence + Reproducibility</h3>
+        <p>Run manifests, checkpoint metadata, SQLite tables for runs/episodes/events/benchmarks, and benchmark JSON/CSV summaries.</p>
+      </article>
+      <article class="panel">
+        <h3 class="title-sm">Orbital Expansion Surface</h3>
+        <p><code>core/control/sim/rl</code> for control primitives plus optional <code>backend</code>, <code>frontend</code>, and <code>mlops</code> tracks.</p>
+      </article>
     </section>
   </main>
 </body>

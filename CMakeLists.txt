@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(
-    NeuroMotorCPP
-    VERSION 0.2.0
-    DESCRIPTION "CPU-first C++20 PPO systems baseline with reproducible experiments"
+    OrbitalNeuralControlCPP
+    VERSION 0.3.0
+    DESCRIPTION "CPU-first C++20 orbital PPO systems baseline with reproducible experiments"
     LANGUAGES CXX
 )
 
@@ -24,15 +24,26 @@ option(NMC_ENABLE_MUJOCO "Enable MuJoCo environment support" OFF)
 option(NMC_BUILD_ORBITAL_CORE "Build orbital core/control/sim baseline library and tests" ON)
 option(NMC_BUILD_ORBITAL_BACKEND "Build orbital backend WebSocket/REST service" OFF)
 
-set(NMC_EIGEN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/lib/eigen-source" CACHE PATH "Path to Eigen root")
-set(NMC_TORCH_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/lib/libtorch" CACHE PATH "Path to LibTorch root")
+set(NMC_EIGEN_DEFAULT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/lib/eigen-source")
+set(NMC_TORCH_DEFAULT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/lib/libtorch")
+
+set(NMC_EIGEN_ROOT "${NMC_EIGEN_DEFAULT_ROOT}" CACHE PATH "Path to Eigen root")
+set(NMC_TORCH_ROOT "${NMC_TORCH_DEFAULT_ROOT}" CACHE PATH "Path to LibTorch root")
 set(NMC_MUJOCO_ROOT "" CACHE PATH "Optional MuJoCo installation root")
 
-if(DEFINED ENV{NMC_EIGEN_ROOT} AND EXISTS "$ENV{NMC_EIGEN_ROOT}/Eigen/Dense")
+if(
+    DEFINED ENV{NMC_EIGEN_ROOT}
+    AND NMC_EIGEN_ROOT STREQUAL NMC_EIGEN_DEFAULT_ROOT
+    AND EXISTS "$ENV{NMC_EIGEN_ROOT}/Eigen/Dense"
+)
     set(NMC_EIGEN_ROOT "$ENV{NMC_EIGEN_ROOT}" CACHE PATH "Path to Eigen root" FORCE)
 endif()
 
-if(DEFINED ENV{NMC_TORCH_ROOT} AND EXISTS "$ENV{NMC_TORCH_ROOT}/share/cmake/Torch/TorchConfig.cmake")
+if(
+    DEFINED ENV{NMC_TORCH_ROOT}
+    AND NMC_TORCH_ROOT STREQUAL NMC_TORCH_DEFAULT_ROOT
+    AND EXISTS "$ENV{NMC_TORCH_ROOT}/share/cmake/Torch/TorchConfig.cmake"
+)
     set(NMC_TORCH_ROOT "$ENV{NMC_TORCH_ROOT}" CACHE PATH "Path to LibTorch root" FORCE)
 endif()
 
@@ -64,6 +75,7 @@ message(STATUS "  NMC_ENABLE_MUJOCO: ${NMC_ENABLE_MUJOCO}")
 message(STATUS "  NMC_BUILD_ORBITAL_CORE: ${NMC_BUILD_ORBITAL_CORE}")
 message(STATUS "  NMC_BUILD_ORBITAL_BACKEND: ${NMC_BUILD_ORBITAL_BACKEND}")
 message(STATUS "  SQLite library: ${NMC_SQLITE3_LIBRARY}")
+message(STATUS "  Primary CLI target: nmc")
 
 set(NMC_SOURCES
     src/common/json_utils.cpp

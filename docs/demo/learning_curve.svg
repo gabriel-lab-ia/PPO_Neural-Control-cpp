@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="860" viewBox="0 0 1200 860">
 <rect width="100%" height="100%" fill="#08111b"/>
-<text x="60" y="50" fill="#f4f8fc" font-size="28" font-family="DejaVu Sans, sans-serif">Neuro Motor CPP - PPO Learning Curve</text>
+<text x="60" y="50" fill="#f4f8fc" font-size="28" font-family="DejaVu Sans, sans-serif">Orbital Neural Control CPP - PPO Learning Curve</text>
 <text x="60" y="80" fill="#9cb3ca" font-size="14" font-family="DejaVu Sans, sans-serif">Learning curve generated from the continuous-control PPO baseline and exported metrics</text>
 <text x="60" y="120" fill="#dce7f3" font-size="18" font-family="DejaVu Sans, sans-serif">Optimization diagnostics</text>
 <rect x="60.00" y="140.00" width="1080.00" height="280.00" fill="#101924" stroke="#314154" stroke-width="1"/>

@@ -49,6 +49,22 @@
         "NMC_BUILD_ORBITAL_CORE": "ON",
         "NMC_BUILD_ORBITAL_BACKEND": "OFF"
       }
+    },
+    {
+      "name": "ci",
+      "displayName": "CI Baseline",
+      "inherits": "dev",
+      "binaryDir": "${sourceDir}/build-ci",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "NMC_ENABLE_WARNINGS": "ON",
+        "NMC_ENABLE_ASAN": "OFF",
+        "NMC_ENABLE_UBSAN": "OFF",
+        "NMC_ENABLE_LTO": "OFF",
+        "NMC_ENABLE_MUJOCO": "OFF",
+        "NMC_BUILD_ORBITAL_CORE": "ON",
+        "NMC_BUILD_ORBITAL_BACKEND": "OFF"
+      }
     }
   ],
   "buildPresets": [
@@ -83,12 +99,26 @@
       "targets": [
         "orbital_backend"
       ]
+    },
+    {
+      "name": "build-ci",
+      "configurePreset": "ci",
+      "targets": [
+        "nmc"
+      ]
     }
   ],
   "testPresets": [
     {
       "name": "test",
       "configurePreset": "dev",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "test-ci",
+      "configurePreset": "ci",
       "output": {
         "outputOnFailure": true
       }

@@ -19,6 +19,7 @@ jobs:
         run: |
           set -euxo pipefail
           required_sources=(
+            "src/interfaces/cli/main.cpp"
             "src/infrastructure/artifacts/artifact_layout.cpp"
             "src/infrastructure/artifacts/artifact_layout.h"
             "src/infrastructure/artifacts/checkpoint_manager.cpp"
@@ -29,6 +30,16 @@ jobs:
           )
           for source_file in "${required_sources[@]}"; do
             test -f "${source_file}"
+          done
+          forbidden_legacy_sources=(
+            "src/main.cpp"
+            "src/app/training_app.cpp"
+            "src/model/ppo_agent.cpp"
+            "src/train/ppo_trainer.cpp"
+            "src/env/environment_registry.cpp"
+          )
+          for source_file in "${forbidden_legacy_sources[@]}"; do
+            test ! -f "${source_file}"
           done
 
       - name: Install system packages
@@ -60,21 +71,23 @@ jobs:
           set -euxo pipefail
           cmake --version
           ninja --version
-          cmake --preset dev \
+          cmake --preset ci \
             -DNMC_TORCH_ROOT="$GITHUB_WORKSPACE/lib/libtorch" \
             -DNMC_ENABLE_MUJOCO=OFF \
             -DNMC_BUILD_ORBITAL_BACKEND=OFF
+          cmake -LA -N build-ci
 
       - name: Build nmc
         run: |
           set -euxo pipefail
-          cmake --build --preset build --verbose
-          test -x build/nmc
+          cmake --build --preset build-ci --verbose
+          test -x build-ci/nmc
+          file build-ci/nmc
 
       - name: Run smoke benchmark test
         run: |
           set -euxo pipefail
-          ctest --test-dir build --output-on-failure --verbose --no-tests=error -R nmc_smoke_benchmark
+          ctest --test-dir build-ci --output-on-failure --verbose --no-tests=error -R nmc_smoke_benchmark
 
       - name: Validate generated artifacts
         run: |

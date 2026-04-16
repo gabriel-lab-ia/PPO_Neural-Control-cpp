@@ -2,43 +2,40 @@
 
 ## Implemented Baseline
 
-- CPU-first PPO train/eval/benchmark pipeline in C++20 + LibTorch.
-- Layered architecture (`domain`, `application`, `infrastructure`, `interfaces`, `common`).
-- Reproducible artifact model with run manifests and benchmark summaries.
-- SQLite telemetry persistence (`runs`, `episodes`, `events`, `benchmarks`).
-- Optional MuJoCo integration path.
-- Inference backend abstraction with TensorRT stub.
-- Orbital expansion modules (`core/control/sim/rl`) with deterministic mission rollout primitives.
-- MLflow tracking scripts and ONNX export/registry workflow.
-- C++ telemetry backend and Next.js mission dashboard scaffold.
+- CPU-first PPO `nmc` CLI in C++20 + LibTorch.
+- Layered runtime architecture under `src/`.
+- Reproducible run artifacts with manifests, checkpoints, and benchmark reports.
+- SQLite persistence for runs, episodes, events, and benchmark summaries.
+- Optional MuJoCo adapter path, disabled by default.
+- Inference backend abstraction with active LibTorch backend and TensorRT stub.
+- CI baseline with configure/build/smoke benchmark/artifact checks.
 
 ## Next 30 Days
 
-1. Add config-file ingestion in `nmc` (`--config path.json`) with CLI override precedence.
-2. Add unit tests for SQLite persistence invariants and artifact schema validation.
-3. Add regression thresholds in smoke benchmark (return floor, latency ceiling).
-4. Add dashboard panels for advantage traces and policy-ratio drift from persisted reports.
-5. Add MLflow run-link generation directly into run manifests.
+1. Add `--config <json>` ingestion to `nmc` with deterministic override precedence.
+2. Add focused unit tests for artifact schema and SQLite invariants.
+3. Add benchmark regression thresholds (return floor + latency ceiling).
+4. Improve benchmark report schema with environment/runtime metadata.
+5. Wire run-to-MLflow URI linkage into run manifest metadata.
 
 ## Next 90 Days
 
-1. Introduce 6DOF orbital environment interface and perturbation packs.
-2. Add LQR/MPC comparison harness with standardized metrics and confidence intervals.
-3. Add safety envelope checks (actuation limits, residual bounds, unstable trajectory flags).
-4. Add ARM cross-compilation profile and embedded latency profiling scripts.
-5. Add model-serving contract tests between LibTorch and ONNX runtimes.
+1. Introduce richer orbital dynamics interfaces (toward 6DOF environment adapters).
+2. Add standardized RL vs LQR/PID comparison harness with confidence intervals.
+3. Add control-safety checks (actuation limits, trajectory divergence flags, residual bounds).
+4. Add ARM profiling scripts focused on deterministic inference latency.
+5. Add LibTorch vs ONNX parity tests for deployment contracts.
 
-## Long-Term Direction (Orbital Autonomy)
+## Long-Term Direction
 
-1. Mission-level objective packs (station-keeping, rendezvous, collision avoidance).
+1. Mission objective packs (station-keeping, rendezvous, collision avoidance).
 2. Hierarchical policy structure for tactical vs strategic orbital maneuvers.
-3. Formalized control-theoretic validation with Lyapunov-style empirical certificates.
-4. Optional TensorRT inference backend with strict parity checks and fallback to LibTorch.
-5. Digital-twin replay workflows for failure analysis and mission auditability.
+3. Deeper control-theoretic validation and stability evidence workflows.
+4. Optional TensorRT integration with strict parity and fallback mechanisms.
+5. Mission replay and audit tooling integrated with telemetry/event persistence.
 
 ## Deferred by Design
 
-- CUDA acceleration (intentionally not required in baseline).
-- Active TensorRT dependency (kept optional and future-scoped).
-- Distributed training infrastructure (deferred until orbital environment fidelity increases).
-
+- CUDA acceleration in baseline path.
+- Active TensorRT runtime dependency.
+- Distributed training infrastructure before dynamics fidelity justifies it.

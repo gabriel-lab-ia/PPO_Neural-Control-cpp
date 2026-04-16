@@ -1,5 +1,6 @@
 # Build outputs
 /build/
+/build-ci/
 /build-orbital*/
 /cmake-build-*/
 /compile_commands.json

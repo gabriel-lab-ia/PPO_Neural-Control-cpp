@@ -1,50 +1,45 @@
 # Architecture Overview
 
-This repository now has two complementary tracks:
+Orbital Neural Control CPP has one official runtime baseline and several optional expansion modules.
 
-1. **Production baseline (`src/`)**: CPU-first PPO train/eval/benchmark pipeline in C++20 + LibTorch.
-2. **Orbital expansion stack (`core/control/sim/rl + backend/frontend + mlops`)**: mission-oriented evolution path for orbital autonomy, telemetry streaming, and experiment operations.
+## 1) Official Runtime Baseline (`src/`)
 
-## Layered Core (`src/`)
+The baseline executable is `nmc` and is built from `src/` only.
+
+Layering:
 
 - `src/domain/`
-  - `ppo/`: actor-critic model, PPO objective/training loop.
+  - `ppo/`: policy/value model and PPO trainer implementation.
   - `env/`: environment interface and environment factory.
-  - `inference/`: inference backend abstraction (`libtorch` active, TensorRT stub).
-  - `config/`: explicit train/eval/benchmark config objects.
+  - `inference/`: backend abstraction (`libtorch` active, TensorRT stub).
+  - `config/`: typed train/eval/benchmark configs and JSON helpers.
 - `src/application/`
-  - `training_runner`, `evaluation_runner`, `benchmark_runner`.
+  - `TrainingRunner`, `EvaluationRunner`, `BenchmarkRunner` orchestration.
 - `src/infrastructure/`
-  - `artifacts/`: run layout, manifests, checkpoint management.
-  - `persistence/`: SQLite store (`runs`, `episodes`, `events`, `benchmarks`).
-  - `reporting/`: CSV/live rollout reports.
+  - `artifacts/`: run layout, manifests, checkpoint lifecycle.
+  - `persistence/`: SQLite persistence (`runs`, `episodes`, `events`, `benchmarks`).
+  - `reporting/`: CSV and rollout reporting.
 - `src/interfaces/`
-  - CLI command surface: `train`, `eval`, `benchmark`.
+  - CLI parsing + commands (`train`, `eval`, `benchmark`).
 - `src/common/`
-  - time/JSON helpers and run-id generation.
+  - JSON escaping, time, and run-id helpers.
 
-## Orbital Expansion Modules
+This is the path validated in CI and used as the reproducible CPU-first contract.
 
-- `core/`
-  - Header-focused orbital control kernel (`orbital::` namespace).
-  - Deterministic 3DOF dynamics and reward model primitives.
-  - `OrbitalControlCore` mission rollout API.
-- `control/`
-  - baseline LQR/PID controllers used for benchmark reference.
-- `sim/`
-  - perturbation/disturbance model interfaces.
-- `rl/`
-  - runtime modes (training/eval/production) and determinism profiles.
-- `training/`
-  - Python orchestration + `pybind11` bridge (`py_orbital_core`).
-- `mlops/`
-  - MLflow tracking pipeline, ONNX export, model registry scripts.
-- `backend/`
-  - C++ REST/WebSocket telemetry stream service.
-- `frontend/`
-  - Next.js mission dashboard (3D orbit + live telemetry charts).
+## 2) Expansion Modules (Optional)
 
-## Artifact and Persistence Model
+These modules are intentionally separated from the baseline runtime so they can evolve without destabilizing `nmc`.
+
+- `core/`: orbital dynamics/control kernel and deterministic mission rollout API.
+- `control/`: baseline LQR/PID controllers for comparison benchmarks.
+- `sim/`: perturbation/disturbance model interfaces.
+- `rl/`: runtime-mode and reproducibility primitives.
+- `training/`: Python orchestration and pybind11 binding.
+- `mlops/`: MLflow tracking, ONNX export, model registration scripts.
+- `backend/`: C++ REST/WebSocket telemetry service.
+- `frontend/`: Next.js mission dashboard prototype.
+
+## 3) Artifact and Persistence Contract
 
 ```text
 artifacts/
@@ -53,56 +48,47 @@ artifacts/
     training_metrics.csv
     training_summary.json
     evaluation_summary.json
+    live_rollout.csv
     checkpoints/policy_last.pt
+    checkpoints/policy_last.meta
   latest/
-  reports/
+    manifest.json
+    training_metrics.csv
+    checkpoint.pt
+    checkpoint.meta
   benchmarks/
+    latest.json
+    latest.csv
+  checkpoints/
+  reports/
   experiments.sqlite
-  mlflow/
-  mlflow-artifacts/
 ```
 
-SQLite schema (baseline runtime store):
+SQLite tables:
 
 - `runs`
 - `episodes`
 - `events`
 - `benchmarks`
 
-MLflow store (MLOps):
+## 4) Execution Flows
 
-- experiment params/metrics/tags
-- run artifacts
-- ONNX model artifacts and registry integration path
-
-## Runtime Modes
-
-### Baseline CLI
+Baseline CLI:
 
 - `./build/nmc train ...`
 - `./build/nmc eval ...`
 - `./build/nmc benchmark --quick ...`
 
-### Mission Telemetry Demo
+Optional MLOps:
 
-- backend emits telemetry through `/ws/telemetry`
-- frontend consumes stream for 3D mission visualization and control diagnostics
+- `python3 mlops/train_with_mlflow.py ...`
 
-### MLOps
+Optional telemetry demo:
 
-- tracked training with MLflow tags (`orbital_dynamics`, `perturbation_level`, `reward_shaping`)
-- ONNX export for embedded inference contract
+- `docker compose up --build -d mlflow backend frontend`
 
-## Optional Integrations and Guardrails
+## 5) Build-Time Guardrails
 
-- MuJoCo remains optional (`NMC_ENABLE_MUJOCO=ON` only when available).
-- TensorRT backend remains a stub and is intentionally disabled by default.
-- CPU-first path is the default CI and local baseline.
-
-## Determinism and Reproducibility
-
-- seed control in train/eval/benchmark configs
-- run manifests and structured summaries for every run
-- benchmark smoke path with artifact validation in CI
-- deterministic mission rollout path in orbital core tests
-
+- MuJoCo remains optional: `NMC_ENABLE_MUJOCO=ON` only when explicitly enabled.
+- TensorRT backend remains a stub and is not a required dependency.
+- Baseline CI path is CPU-only and validates artifact generation.

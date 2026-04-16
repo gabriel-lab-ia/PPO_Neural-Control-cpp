@@ -115,8 +115,8 @@ def render_svg(rows: List[Dict[str, float | str]], output_path: str) -> None:
     svg: List[str] = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}">',
         '<rect width="100%" height="100%" fill="#08111b"/>',
-        '<text x="60" y="50" fill="#f4f8fc" font-size="28" font-family="DejaVu Sans, sans-serif">Neuro Motor CPP - PPO Learning Curve</text>',
-        '<text x="60" y="80" fill="#9cb3ca" font-size="14" font-family="DejaVu Sans, sans-serif">Learning curve generated from the continuous-control PPO baseline, with stability and efficiency diagnostics.</text>',
+        '<text x="60" y="50" fill="#f4f8fc" font-size="28" font-family="DejaVu Sans, sans-serif">Orbital Neural Control CPP - PPO Learning Curve</text>',
+        '<text x="60" y="80" fill="#9cb3ca" font-size="14" font-family="DejaVu Sans, sans-serif">Learning curve generated from training_metrics.csv with stability and efficiency diagnostics.</text>',
     ]
 
     final = rows[-1]

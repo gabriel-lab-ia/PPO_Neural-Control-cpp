@@ -1,53 +1,72 @@
 # Contributing
 
-Thank you for considering a contribution to `Neuro Motor CPP`.
+Thanks for contributing to **Orbital Neural Control CPP**.
 
-## Scope
+This repository is a C++20 RL systems baseline with an orbital-autonomy direction. Contributions should improve reliability, reproducibility, and maintainability.
 
-Contributions are welcome in these areas:
+## Engineering Principles
 
-- PPO training stability and code quality
-- MuJoCo environment adapters
-- visualization and export tooling
-- documentation and reproducibility
-- testing and CI improvements
+- Keep the CPU-first baseline (`nmc`) working.
+- Prefer explicit interfaces and low coupling.
+- Keep optional integrations optional (MuJoCo, backend/frontend, MLflow).
+- Do not add hidden runtime dependencies.
+- Keep documentation aligned with real behavior.
 
-## Development Workflow
-
-1. Fork the repository.
-2. Create a feature branch.
-3. Build locally with CMake.
-4. Run the baseline training flow.
-5. Submit a pull request with a focused change.
-
-## Local Build
+## Development Setup
 
 ```bash
+bash tools/setup_libtorch_cpu.sh
 cmake --preset dev
 cmake --build --preset build
-./build/motor
 ```
 
-## Code Style
+Primary executable:
 
-- Prefer modern C++20.
-- Keep interfaces small and explicit.
-- Avoid unnecessary abstraction in performance-critical paths.
-- Preserve the current modular layout under `src/env`, `src/model`, `src/train`, and `src/utils`.
+```bash
+./build/nmc help
+```
+
+## Validation Before PR
+
+Run at least these checks locally:
+
+```bash
+./build/nmc benchmark --quick --name pre_pr_smoke --seed 7
+ctest --test-dir build --output-on-failure --verbose -R nmc_smoke_benchmark
+```
+
+If you touch orbital core modules:
+
+```bash
+cmake --preset orbital-core-only
+cmake --build --preset build-orbital
+ctest --test-dir build-orbital-core --output-on-failure
+```
+
+## Code Conventions
+
+- C++20, RAII, const-correctness, and explicit ownership.
+- Keep `src/` layering intact:
+  - `domain` for RL/environment logic
+  - `application` for orchestration
+  - `infrastructure` for persistence/artifacts/reporting
+  - `interfaces` for CLI
+- Keep names descriptive and avoid throwaway identifiers.
+- Add comments only when clarifying intent or design constraints.
 
 ## Pull Request Guidelines
 
-- Keep changes narrowly scoped.
-- Describe behavioral impact clearly.
-- Include validation steps.
-- Add or update documentation when behavior changes.
+- Keep PR scope focused.
+- Include a short problem statement and validation steps.
+- Update docs when behavior/commands/paths change.
+- If functionality is roadmap-only, mark it clearly (do not present as shipped).
 
-## Issues
+## Reporting Issues
 
-If you open an issue, please include:
+Please include:
 
-- operating system
-- compiler version
+- OS and compiler versions
+- exact configure/build/run commands
 - whether MuJoCo is enabled
-- exact command used
-- relevant logs or screenshots
+- logs or stack traces
+- generated artifact paths when relevant

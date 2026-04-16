@@ -1,25 +1,31 @@
-# Local Security Notes
+# Security Notes
 
-This workspace is configured for private local development.
+## Baseline Security Posture
 
-## What is already in place
+- The default runtime is CPU-first and local-first.
+- Build artifacts and common secret patterns are ignored in `.gitignore`.
+- Linux hardening flags are enabled in baseline CMake (`relro/now`, stack protection, fortify).
+- Optional sanitizers are available through the `debug-sanitized` CMake preset.
 
-- Build artifacts are ignored by `.gitignore`
-- Common secret files such as `.env`, `.pem`, `.key`, and `secrets/` are ignored
-- Linux linker hardening flags are enabled for normal builds
-- Debug sanitizers are available through the `debug-sanitized` preset
-- VS Code uses `compile_commands.json` to avoid manual include-path drift
+## Sensitive Data Hygiene
 
-## Good habits for this workspace
+Do not commit:
 
-- Keep remote publishing disabled unless you intentionally create a repository
-- Review files under `build/`, `logs/`, `runs/`, and `checkpoints/` before sharing anything
-- Avoid storing production credentials in source files
-- Prefer CPU-only experiments unless you explicitly add and validate GPU dependencies
+- `.env` files with real credentials
+- private keys (`*.pem`, `*.key`, `*.crt`, `*.p12`)
+- production telemetry dumps containing sensitive mission parameters
 
-## If you initialize Git later
+## Reporting
 
-- Run `git init`
-- Confirm `.gitignore` is present before the first commit
-- Consider removing vendored dependency metadata like nested `.git` folders only if you no longer need their history
+If you discover a vulnerability or unsafe default behavior, open a private security report when possible and include:
 
+- affected component (`src/`, `core/`, `backend/`, etc.)
+- reproducible steps
+- impact scope
+- mitigation proposal
+
+## Operational Guidance
+
+- Keep optional integrations explicitly disabled unless required (`MuJoCo`, backend, MLflow services).
+- Prefer deterministic smoke runs before publishing benchmark claims.
+- Validate generated artifacts before sharing externally.
