@@ -21,7 +21,7 @@ jobs:
   baseline-vcpkg:
     name: baseline-vcpkg
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 90
 
     steps:
       - name: Checkout
@@ -124,6 +124,7 @@ jobs:
   asan-ubsan:
     name: asan-ubsan
     runs-on: ubuntu-latest
+    needs: baseline-vcpkg
     timeout-minutes: 40
 
     steps:
@@ -179,6 +180,7 @@ jobs:
   tsan:
     name: tsan
     runs-on: ubuntu-latest
+    needs: baseline-vcpkg
     timeout-minutes: 40
 
     steps:
@@ -234,6 +236,7 @@ jobs:
   coverage:
     name: coverage
     runs-on: ubuntu-latest
+    needs: baseline-vcpkg
     timeout-minutes: 40
 
     steps:
