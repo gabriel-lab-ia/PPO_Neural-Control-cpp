@@ -2,6 +2,15 @@
   <img src="docs/assets/orbital-hero-banner.svg" alt="Orbital Neural Control CPP hero" width="100%" />
 </p>
 
+## Running the full stack with Docker Compose
+
+From the repository root directory, run:
+
+```bash
+cd Orbital-Neural-Control-CPP
+docker compose up --build -d mlflow backend frontend
+docker compose run --rm training
+docker compose logs -f backend frontend
 # Orbital Neural Control CPP
 
 **C++20 autonomy engineering baseline for PPO-based continuous control, reproducible experiments, telemetry persistence, and benchmarkable evaluation.**
