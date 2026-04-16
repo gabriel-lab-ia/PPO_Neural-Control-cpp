@@ -359,7 +359,7 @@ The UI is intentionally aligned with the system architecture of the C++ runtime 
 ## Frontend Stack
 Core technologies:
 
-- React
+- React.js
 - TypeScript
 - Vite
 - Three.js
