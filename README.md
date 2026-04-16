@@ -131,11 +131,29 @@ Properties:
 
 This environment is a scaffold before higher-fidelity orbital simulation layers.
 
-### Reference smoke performance
+### Validated operational baseline
 
-| env | backend | updates | deterministic |
-| --- | --- | --- | --- |
-| point_mass | libtorch CPU | 30 | yes |
+| component | current implementation | purpose |
+|---|---|---|
+| primary language | C++20 | autonomy core and runtime |
+| RL backend | LibTorch CPU | baseline training and inference |
+| reference environment | `point_mass` | fast continuous-control validation |
+| benchmark layer | smoke benchmark + CTest | pipeline integrity |
+| persistence | SQLite | runs, episodes, events, benchmarks |
+| experiment tracking | MLflow | metrics, artifacts, experiment lineage |
+| real-time backend | C++ REST + WebSocket | operational telemetry |
+| frontend | Next.js 15 + R3F + Recharts | live 3D mission visualization |
+
+### Architecture expansion roadmap
+
+| track | status | note |
+|---|---|---|
+| classical controllers (`LQR` / `PID`) | present | baseline comparison against RL |
+| ONNX export | present | portable deployment contract |
+| MuJoCo | optional | outside the default baseline |
+| TensorRT | future | planned inference backend |
+| orbital fidelity upgrade | roadmap | evolution from 3DOF to 6DOF |
+| safety envelopes / disturbances | roadmap | more realistic mission conditions |
 
 ## Frontend Mission Replay (MVP)
 
