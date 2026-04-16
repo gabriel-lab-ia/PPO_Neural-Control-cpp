@@ -11,6 +11,7 @@ concurrency:
 
 env:
   CMAKE_GENERATOR: Ninja
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   VCPKG_DEFAULT_TRIPLET: x64-linux
   VCPKG_DEFAULT_HOST_TRIPLET: x64-linux
   VCPKG_FEATURE_FLAGS: manifests,binarycaching
