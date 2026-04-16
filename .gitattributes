@@ -1,11 +1,16 @@
 # Vendored / third-party code
 lib/eigen-source/** linguist-vendored
 
+<<<<<<< HEAD
 # Build and generated outputs
+=======
+# Build outputs
+>>>>>>> 2dda0f4 (chore: adjust GitHub Linguist to properly detect frontend languages)
 build/** linguist-generated
 build-ci/** linguist-generated
 build-orbital/** linguist-generated
 build-orbital-core/** linguist-generated
+<<<<<<< HEAD
 artifacts/** linguist-generated
 
 # Docs and assets that should not affect language stats
@@ -16,3 +21,17 @@ assets/** linguist-generated
 frontend/package-lock.json linguist-generated
 frontend/.next/** linguist-generated
 frontend/dist/** linguist-generated
+=======
+
+# Artifacts
+artifacts/** linguist-generated
+
+# Docs assets
+docs/assets/** linguist-generated
+assets/** linguist-generated
+
+# frontend generated files
+frontend/node_modules/** linguist-generated
+frontend/dist/** linguist-generated
+frontend/package-lock.json linguist-generated
+>>>>>>> 2dda0f4 (chore: adjust GitHub Linguist to properly detect frontend languages)
