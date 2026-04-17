@@ -6,7 +6,7 @@
 #include <string>
 
 #include "domain/inference/libtorch_policy_backend.h"
-#include "domain/inference/tensorrt_policy_backend_stub.h"
+#include "domain/inference/tensorrt_policy_backend.h"
 
 namespace nmc::domain::inference {
 
@@ -75,21 +75,21 @@ std::unique_ptr<PolicyInferenceBackend> make_inference_backend(
         case InferenceBackendKind::kLibTorch:
             return std::make_unique<LibTorchPolicyBackend>(observation_dim, action_dim, hidden_dim);
         case InferenceBackendKind::kTensorRtFp32:
-            return std::make_unique<TensorRtPolicyBackendStub>(
+            return std::make_unique<TensorRtPolicyBackend>(
                 observation_dim,
                 action_dim,
                 hidden_dim,
                 InferencePrecision::kFp32
             );
         case InferenceBackendKind::kTensorRtFp16:
-            return std::make_unique<TensorRtPolicyBackendStub>(
+            return std::make_unique<TensorRtPolicyBackend>(
                 observation_dim,
                 action_dim,
                 hidden_dim,
                 InferencePrecision::kFp16
             );
         case InferenceBackendKind::kTensorRtInt8:
-            return std::make_unique<TensorRtPolicyBackendStub>(
+            return std::make_unique<TensorRtPolicyBackend>(
                 observation_dim,
                 action_dim,
                 hidden_dim,

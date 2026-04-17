@@ -19,6 +19,8 @@ Bootstrap vcpkg once:
 export VCPKG_ROOT="$HOME/.vcpkg"
 ```
 
+If `VCPKG_ROOT` is missing/invalid, CMake now fails early with an explicit error message instead of silently falling back.
+
 ## Baseline Runtime (`nmc`)
 
 Configure + build:
@@ -100,3 +102,20 @@ Expected smoke artifacts:
 - `artifacts/latest/manifest.json`
 - `artifacts/latest/checkpoint.pt`
 - `artifacts/experiments.sqlite`
+
+## Optional TensorRT Configure Path
+
+TensorRT is opt-in and requires SDK headers/libs available locally:
+
+```bash
+cmake --preset dev-tensorrt -DNMC_TENSORRT_ROOT=/opt/tensorrt
+cmake --build --preset build-tensorrt
+```
+
+Without TensorRT SDK, keep using baseline `dev` preset; `tensorrt_*` backends remain available in compatibility mode for parity testing.
+
+Quick backend parity + latency comparison table:
+
+```bash
+NMC_BIN=./build/nmc ./scripts/compare_inference_backends.sh
+```

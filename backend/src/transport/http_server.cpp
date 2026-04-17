@@ -11,12 +11,12 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/beast/websocket.hpp>
+#include <boost/json.hpp>
 
 #include <algorithm>
 #include <chrono>
 #include <functional>
 #include <optional>
-#include <regex>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -29,39 +29,60 @@ using tcp = boost::asio::ip::tcp;
 
 namespace {
 
-std::string extract_json_string(std::string_view body, const std::string& key) {
-    const std::string body_string(body);
-    const std::regex pattern("\"" + key + "\"\\s*:\\s*\"([^\"]*)\"");
-    std::smatch match;
-    if (std::regex_search(body_string, match, pattern) && match.size() > 1) {
-        return match[1].str();
-    }
-    return {};
-}
+struct ParsedJobRequestBody {
+    std::optional<std::string> run_id;
+    std::optional<std::int64_t> seed;
+    std::optional<bool> quick;
+};
 
-std::optional<std::int64_t> extract_json_int(std::string_view body, const std::string& key) {
-    const std::string body_string(body);
-    const std::regex pattern("\"" + key + "\"\\s*:\\s*(-?[0-9]+)");
-    std::smatch match;
-    if (std::regex_search(body_string, match, pattern) && match.size() > 1) {
-        try {
-            return std::stoll(match[1].str());
-        } catch (...) {
+std::optional<ParsedJobRequestBody> parse_job_request_body(
+    const std::string_view body,
+    std::string& error_message
+) {
+    if (body.empty()) {
+        return ParsedJobRequestBody{};
+    }
+
+    boost::json::error_code parse_error;
+    const auto parsed = boost::json::parse(body, parse_error);
+    if (parse_error) {
+        error_message = "invalid JSON payload: " + parse_error.message();
+        return std::nullopt;
+    }
+
+    if (!parsed.is_object()) {
+        error_message = "request payload must be a JSON object";
+        return std::nullopt;
+    }
+
+    const auto& object = parsed.as_object();
+    ParsedJobRequestBody payload;
+
+    if (const auto it = object.find("run_id"); it != object.end()) {
+        if (!it->value().is_string()) {
+            error_message = "field 'run_id' must be a string";
             return std::nullopt;
         }
+        payload.run_id = std::string(it->value().as_string().c_str());
     }
-    return std::nullopt;
-}
 
-std::optional<bool> extract_json_bool(std::string_view body, const std::string& key) {
-    const std::string body_string(body);
-    const std::regex pattern("\"" + key + "\"\\s*:\\s*(true|false)");
-    std::smatch match;
-    if (std::regex_search(body_string, match, pattern) && match.size() > 1) {
-        const std::string value = match[1].str();
-        return value == "true";
+    if (const auto it = object.find("seed"); it != object.end()) {
+        if (!it->value().is_int64() && !it->value().is_uint64()) {
+            error_message = "field 'seed' must be an integer";
+            return std::nullopt;
+        }
+        payload.seed = it->value().is_int64() ? it->value().as_int64() : static_cast<std::int64_t>(it->value().as_uint64());
     }
-    return std::nullopt;
+
+    if (const auto it = object.find("quick"); it != object.end()) {
+        if (!it->value().is_bool()) {
+            error_message = "field 'quick' must be a boolean";
+            return std::nullopt;
+        }
+        payload.quick = it->value().as_bool();
+    }
+
+    return payload;
 }
 
 void send_response(
@@ -413,29 +434,36 @@ http::status handle_post(
     application::JobService& job_service,
     std::string& response_json
 ) {
-    auto parse_job_request = [&](const domain::JobType type) {
+    const auto make_request = [&](const domain::JobType type, const ParsedJobRequestBody& payload) {
         application::JobLaunchRequest request;
         request.type = type;
-        request.run_id = extract_json_string(body, "run_id");
-        request.seed = extract_json_int(body, "seed").value_or(7);
-        request.quick = extract_json_bool(body, "quick").value_or(true);
+        request.run_id = payload.run_id.value_or("");
+        request.seed = payload.seed.value_or(7);
+        request.quick = payload.quick.value_or(true);
         return request;
     };
 
+    std::string parse_error;
+    const auto payload = parse_job_request_body(body, parse_error);
+    if (!payload.has_value()) {
+        response_json = error_response("invalid_request", parse_error, target.path);
+        return http::status::bad_request;
+    }
+
     if (target.path == "/train/jobs") {
-        const auto job = job_service.submit(parse_job_request(domain::JobType::Train));
+        const auto job = job_service.submit(make_request(domain::JobType::Train, *payload));
         response_json = ok_response(job_to_json(job));
         return http::status::accepted;
     }
 
     if (target.path == "/eval/jobs") {
-        const auto job = job_service.submit(parse_job_request(domain::JobType::Eval));
+        const auto job = job_service.submit(make_request(domain::JobType::Eval, *payload));
         response_json = ok_response(job_to_json(job));
         return http::status::accepted;
     }
 
     if (target.path == "/benchmark/jobs") {
-        const auto job = job_service.submit(parse_job_request(domain::JobType::Benchmark));
+        const auto job = job_service.submit(make_request(domain::JobType::Benchmark, *payload));
         response_json = ok_response(job_to_json(job));
         return http::status::accepted;
     }

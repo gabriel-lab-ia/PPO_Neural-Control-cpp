@@ -13,6 +13,7 @@ C++20 orbital autonomy/control engineering platform with reproducible PPO workfl
   <img alt="LibTorch" src="https://img.shields.io/badge/LibTorch-CPU%20First-ee4c2c?logo=pytorch&logoColor=white" />
   <img alt="PPO" src="https://img.shields.io/badge/RL-PPO-1f6feb" />
   <img alt="SQLite" src="https://img.shields.io/badge/SQLite-Telemetry-003B57?logo=sqlite&logoColor=white" />
+  <img alt="TensorRT" src="https://img.shields.io/badge/TensorRT-Optional-76B900?logo=nvidia&logoColor=white" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-Strict-3178c6?logo=typescript&logoColor=white" />
   <img alt="JavaScript" src="https://img.shields.io/badge/JavaScript-Runtime-f7df1e?logo=javascript&logoColor=black" />
   <img alt="React" src="https://img.shields.io/badge/React-Mission%20UI-61dafb?logo=react&logoColor=black" />
@@ -95,6 +96,47 @@ cmake --build --preset build
 
 ```bash
 ./build/nmc eval --checkpoint artifacts/latest/checkpoint.pt --episodes 10 --backend libtorch --run-id eval_local_001 --seed 7
+```
+
+### 5) Optional TensorRT-compatible backend validation
+
+The baseline remains CPU-first (`libtorch`). TensorRT backend names are already accepted by CLI and validated in parity mode:
+
+```bash
+# fp16-compatible path (parity/emulation mode)
+./build/nmc eval --checkpoint artifacts/latest/checkpoint.pt --backend tensorrt_fp16 --episodes 10 --seed 7 --run-id eval_trt_fp16
+
+# int8-compatible path (parity/emulation mode)
+./build/nmc eval --checkpoint artifacts/latest/checkpoint.pt --backend tensorrt_int8 --episodes 10 --seed 7 --run-id eval_trt_int8
+```
+
+If you pass `.engine`, `.plan`, or `.onnx`, runtime returns an explicit error when native TensorRT support is not compiled.
+
+## TensorRT Integration Status + Measured Data
+
+Current implementation separates two states:
+
+- **Shipped now**: TensorRT-compatible backend API with parity/evaluation path and runtime capability reporting in `evaluation_summary.json`.
+- **Not shipped yet**: full native engine lifecycle (ONNX export + engine build + calibration cache + deployment runtime).
+
+Measured comparison on **April 17, 2026** (`point_mass`, same quick-trained checkpoint, `episodes=20`, `seed=7`):
+
+| Backend CLI | Runtime reported | Emulated | Avg episode return | Avg inference latency (ms) | P95 latency (ms) | Summary file |
+| --- | --- | --- | ---: | ---: | ---: | --- |
+| `libtorch` | `libtorch_cpu` | `false` | `48.0350` | `0.0305768` | `0.0358060` | `artifacts/runs/<eval_run_id>/evaluation_summary.json` |
+| `tensorrt_fp16` | `tensorrt_stub_emulation` | `true` | `48.0350` | `0.0397559` | `0.0440470` | `artifacts/runs/<eval_run_id>/evaluation_summary.json` |
+| `tensorrt_int8` | `tensorrt_stub_emulation` | `true` | `48.2105` | `0.0474782` | `0.0544430` | `artifacts/runs/<eval_run_id>/evaluation_summary.json` |
+
+Interpretation:
+
+- policy quality remains statistically aligned across backends for this smoke-scale workload.
+- latency is currently higher in TensorRT compatibility mode because this path is emulated, not native TensorRT kernels.
+- these numbers are useful for parity confidence, not as claims of TensorRT acceleration.
+
+Reproduce the table with one command:
+
+```bash
+./scripts/compare_inference_backends.sh
 ```
 
 ## API and Streaming Contracts (Optional Backend)
@@ -215,6 +257,7 @@ Replay docs:
 - `docs/architecture/backend-api.md`
 - `docs/architecture/system-dataflow.md`
 - `docs/performance/backend-performance.md`
+- `docs/performance/inference-backend-comparison.md`
 - `docs/database/sqlite-telemetry.md`
 - `docs/openapi/orbital-api.yaml`
 - `docs/roadmap.md`

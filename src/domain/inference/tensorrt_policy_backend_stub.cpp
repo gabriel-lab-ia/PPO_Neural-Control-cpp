@@ -33,6 +33,9 @@ InferenceBackendCapabilities TensorRtPolicyBackendStub::capabilities() const {
         .supports_dynamic_shapes = true,
         .supports_fp16 = true,
         .supports_int8 = true,
+        .uses_cuda = false,
+        .is_emulated = true,
+        .runtime = "tensorrt_stub_emulation",
         .configured_precision = precision_
     };
 }

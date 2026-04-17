@@ -19,7 +19,12 @@ Primary database file:
 - `model_registry_refs`
 - `schema_migrations`
 
-These tables are created with `IF NOT EXISTS` and do not break existing baseline flows.
+Schema is migrated incrementally:
+
+- `v1`: `runs`, `episodes`, `events`, `benchmarks`
+- `v2`: `telemetry_samples`, `run_artifacts`, `run_configs`, `model_registry_refs`
+
+`schema_migrations(version, applied_at)` is written transactionally by the runtime, so startup fails fast if migrations do not complete.
 
 ## Index Strategy
 

@@ -22,6 +22,9 @@ struct InferenceBackendCapabilities {
     bool supports_dynamic_shapes = false;
     bool supports_fp16 = false;
     bool supports_int8 = false;
+    bool uses_cuda = false;
+    bool is_emulated = false;
+    std::string runtime = "unknown";
     InferencePrecision configured_precision = InferencePrecision::kFp32;
 };
 

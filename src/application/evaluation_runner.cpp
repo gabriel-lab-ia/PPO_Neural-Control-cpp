@@ -1,6 +1,8 @@
 #include "application/evaluation_runner.h"
 
 #include <algorithm>
+#include <chrono>
+#include <cmath>
 #include <filesystem>
 #include <iostream>
 #include <numeric>
@@ -47,6 +49,19 @@ float mean_int(const std::vector<int64_t>& values) {
     return static_cast<float>(sum) / static_cast<float>(values.size());
 }
 
+float percentile_approx(std::vector<float> values, const float percentile) {
+    if (values.empty()) {
+        return 0.0f;
+    }
+
+    const float clamped = std::clamp(percentile, 0.0f, 1.0f);
+    const auto index = static_cast<std::size_t>(
+        std::ceil(clamped * static_cast<float>(values.size() - 1))
+    );
+    std::nth_element(values.begin(), values.begin() + static_cast<std::ptrdiff_t>(index), values.end());
+    return values[index];
+}
+
 std::filesystem::path resolve_checkpoint_path(
     const domain::config::EvalConfig& config,
     const std::filesystem::path& artifact_root
@@ -82,6 +97,8 @@ std::string evaluation_summary_json(
     const float avg_episode_return,
     const float avg_episode_length,
     const float success_rate,
+    const float avg_inference_latency_ms,
+    const float p95_inference_latency_ms,
     const int64_t episodes
 ) {
     std::ostringstream stream;
@@ -92,13 +109,18 @@ std::string evaluation_summary_json(
     stream << "  \"backend_capabilities\": {\n";
     stream << "    \"supports_dynamic_shapes\": " << (capabilities.supports_dynamic_shapes ? "true" : "false") << ",\n";
     stream << "    \"supports_fp16\": " << (capabilities.supports_fp16 ? "true" : "false") << ",\n";
-    stream << "    \"supports_int8\": " << (capabilities.supports_int8 ? "true" : "false") << "\n";
+    stream << "    \"supports_int8\": " << (capabilities.supports_int8 ? "true" : "false") << ",\n";
+    stream << "    \"uses_cuda\": " << (capabilities.uses_cuda ? "true" : "false") << ",\n";
+    stream << "    \"is_emulated\": " << (capabilities.is_emulated ? "true" : "false") << ",\n";
+    stream << "    \"runtime\": \"" << common::json_escape(capabilities.runtime) << "\"\n";
     stream << "  },\n";
     stream << "  \"checkpoint_path\": \"" << common::json_escape(checkpoint_path.string()) << "\",\n";
     stream << "  \"episodes\": " << episodes << ",\n";
     stream << "  \"avg_episode_return\": " << avg_episode_return << ",\n";
     stream << "  \"avg_episode_length\": " << avg_episode_length << ",\n";
-    stream << "  \"success_rate\": " << success_rate << "\n";
+    stream << "  \"success_rate\": " << success_rate << ",\n";
+    stream << "  \"avg_inference_latency_ms\": " << avg_inference_latency_ms << ",\n";
+    stream << "  \"p95_inference_latency_ms\": " << p95_inference_latency_ms << "\n";
     stream << "}\n";
     return stream.str();
 }
@@ -174,6 +196,8 @@ EvaluationRunOutput EvaluationRunner::run(const domain::config::EvalConfig& inpu
 
         std::vector<EpisodeEvaluation> episodes;
         episodes.reserve(static_cast<std::size_t>(config.episodes));
+        std::vector<float> inference_latencies_ms;
+        inference_latencies_ms.reserve(static_cast<std::size_t>(config.episodes * config.max_steps));
 
         int64_t env_steps = 0;
         for (int64_t episode_index = 0; episode_index < config.episodes; ++episode_index) {
@@ -183,7 +207,12 @@ EvaluationRunOutput EvaluationRunner::run(const domain::config::EvalConfig& inpu
             float success = 0.0f;
 
             for (int64_t step = 0; step < config.max_steps; ++step) {
+                const auto inference_begin = std::chrono::steady_clock::now();
                 const auto inference = backend->infer(observation, config.deterministic_policy);
+                const auto inference_end = std::chrono::steady_clock::now();
+                inference_latencies_ms.push_back(
+                    std::chrono::duration<float, std::milli>(inference_end - inference_begin).count()
+                );
                 const auto action = inference.action.dim() == 2 ? inference.action[0] : inference.action;
                 const auto result = environment->step(action.to(torch::kCPU));
 
@@ -239,6 +268,8 @@ EvaluationRunOutput EvaluationRunner::run(const domain::config::EvalConfig& inpu
         const auto avg_return = mean_float(returns);
         const auto avg_length = mean_int(lengths);
         const auto success_rate = mean_float(successes);
+        const auto avg_inference_latency_ms = mean_float(inference_latencies_ms);
+        const auto p95_inference_latency_ms = percentile_approx(inference_latencies_ms, 0.95f);
 
         summary_json = evaluation_summary_json(
             config.run_id,
@@ -249,6 +280,8 @@ EvaluationRunOutput EvaluationRunner::run(const domain::config::EvalConfig& inpu
             avg_return,
             avg_length,
             success_rate,
+            avg_inference_latency_ms,
+            p95_inference_latency_ms,
             config.episodes
         );
         infrastructure::artifacts::write_text_file(layout.eval_summary_json, summary_json);
@@ -295,9 +328,12 @@ EvaluationRunOutput EvaluationRunner::run(const domain::config::EvalConfig& inpu
             layout.run_dir,
             layout.run_manifest_json,
             layout.eval_summary_json,
+            capabilities.runtime,
             avg_return,
             avg_length,
-            success_rate
+            success_rate,
+            avg_inference_latency_ms,
+            p95_inference_latency_ms
         };
     } catch (const std::exception& error) {
         const auto failed_at = common::now_utc_iso8601();

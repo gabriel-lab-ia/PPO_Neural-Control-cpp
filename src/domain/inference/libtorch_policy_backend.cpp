@@ -23,6 +23,9 @@ InferenceBackendCapabilities LibTorchPolicyBackend::capabilities() const {
         .supports_dynamic_shapes = true,
         .supports_fp16 = false,
         .supports_int8 = false,
+        .uses_cuda = false,
+        .is_emulated = false,
+        .runtime = "libtorch_cpu",
         .configured_precision = InferencePrecision::kFp32
     };
 }

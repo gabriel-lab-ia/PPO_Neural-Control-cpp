@@ -69,6 +69,13 @@ public:
 
 private:
     void execute(const std::string& sql) const;
+    void initialize_pragmas();
+    void ensure_migration_table();
+    int64_t current_schema_version() const;
+    void record_migration(int64_t version);
+    void apply_migrations();
+    void apply_schema_v1();
+    void apply_schema_v2();
 
     std::filesystem::path db_path_;
     sqlite3* db_ = nullptr;

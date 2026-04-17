@@ -11,8 +11,8 @@ namespace orbital::backend::transport {
 struct ServerConfig {
     std::uint16_t port = 8080;
     std::string service_name = "orbital-backend";
-    std::string service_version = "0.4.0";
-    std::string schema_version = "2026-04-16";
+    std::string service_version = "0.4.1";
+    std::string schema_version = "2026-04-17";
     std::string source = "orbital.backend";
 };
 

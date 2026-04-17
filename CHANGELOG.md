@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## 0.4.1 - TensorRT Readiness + Runtime Hardening
+
+- Added explicit `TensorRtPolicyBackend` controller in the inference layer, keeping CLI compatibility while exposing runtime/emulation capability metadata.
+- Expanded evaluation summaries with backend runtime metadata and inference latency statistics (`avg_inference_latency_ms`, `p95_inference_latency_ms`) for reproducible backend comparisons.
+- Added optional TensorRT build hooks (`NMC_ENABLE_TENSORRT`) with clear configuration diagnostics and dedicated CMake presets (`dev-tensorrt`, `build-tensorrt`).
+- Hardened configure-time bootstrap diagnostics when `VCPKG_ROOT` is missing or `CMAKE_TOOLCHAIN_FILE` is invalid.
+- Recalibrated CI smoke benchmark quality gates to realistic deterministic envelope thresholds for current baseline dynamics.
+- Replaced backend POST body regex parsing with structured JSON parsing using Boost.JSON.
+- Introduced SQLite schema versioning/migrations scaffold for forward-safe persistence evolution.
+- Applied frontend code-splitting for the 3D orbital scene to reduce initial bundle pressure.
+
 ## 0.4.0 - Deterministic PPO Runtime + 6DOF Foundations
 
 - Added deterministic runtime bootstrap (`src/common/determinism.*`) and enforced seed propagation through train/eval orchestration.

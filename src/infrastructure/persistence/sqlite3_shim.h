@@ -39,6 +39,7 @@ int sqlite3_bind_text(
 );
 int sqlite3_bind_int64(sqlite3_stmt* stmt, int index, sqlite3_int64 value);
 int sqlite3_bind_double(sqlite3_stmt* stmt, int index, double value);
+sqlite3_int64 sqlite3_column_int64(sqlite3_stmt* stmt, int i_col);
 int sqlite3_changes(sqlite3* db);
 const char* sqlite3_errmsg(sqlite3* db);
 void sqlite3_free(void*);

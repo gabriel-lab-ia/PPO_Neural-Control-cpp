@@ -21,6 +21,7 @@
         "NMC_PGO_MODE": "OFF",
         "NMC_USE_LEGACY_VENDOR_DEPS": "OFF",
         "NMC_ENABLE_MUJOCO": "OFF",
+        "NMC_ENABLE_TENSORRT": "OFF",
         "NMC_BUILD_ORBITAL_CORE": "OFF",
         "NMC_BUILD_ORBITAL_BACKEND": "OFF"
       }
@@ -42,6 +43,15 @@
       "displayName": "Baseline Dev (vcpkg)",
       "inherits": "dev",
       "cacheVariables": {}
+    },
+    {
+      "name": "dev-tensorrt",
+      "displayName": "Baseline Dev + TensorRT (optional)",
+      "inherits": "dev",
+      "binaryDir": "${sourceDir}/build-tensorrt",
+      "cacheVariables": {
+        "NMC_ENABLE_TENSORRT": "ON"
+      }
     },
     {
       "name": "debug-sanitized",
@@ -74,12 +84,13 @@
     {
       "name": "release",
       "displayName": "Release + LTO + PGO(auto)",
-      "inherits": "base",
+      "inherits": "dev",
       "binaryDir": "${sourceDir}/build-release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "NMC_ENABLE_LTO": "ON",
-        "NMC_PGO_MODE": "AUTO"
+        "NMC_PGO_MODE": "AUTO",
+        "NMC_USE_LEGACY_VENDOR_DEPS": "OFF"
       }
     },
     {
@@ -145,6 +156,14 @@
     {
       "name": "build-vcpkg",
       "configurePreset": "dev-vcpkg",
+      "targets": [
+        "nmc",
+        "nmc_inference_parity_test"
+      ]
+    },
+    {
+      "name": "build-tensorrt",
+      "configurePreset": "dev-tensorrt",
       "targets": [
         "nmc",
         "nmc_inference_parity_test"

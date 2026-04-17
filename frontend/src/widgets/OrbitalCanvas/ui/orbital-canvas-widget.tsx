@@ -1,10 +1,16 @@
+import { lazy, Suspense } from "react";
+
 import { Gauge, Navigation, Orbit } from "lucide-react";
 
 import type { OrbitPathPoint } from "@/entities/orbit/model/types";
 import type { ReplayFrame } from "@/entities/replay/model/types";
-import { OrbitalSceneCanvas } from "@/features/orbital-view/ui/orbital-scene-canvas";
 import { formatNumber } from "@/shared/lib/format";
 import { Panel, PanelBody, PanelHeader, PanelTitle } from "@/shared/ui/panel";
+
+const OrbitalSceneCanvas = lazy(async () => {
+  const module = await import("@/features/orbital-view/ui/orbital-scene-canvas");
+  return { default: module.OrbitalSceneCanvas };
+});
 
 interface OrbitalCanvasWidgetProps {
   frame: ReplayFrame;
@@ -35,7 +41,15 @@ export function OrbitalCanvasWidget({ frame, orbitPath }: OrbitalCanvasWidgetPro
 
       <PanelBody className="relative p-0">
         <div className="relative h-[620px] w-full overflow-hidden bg-black lg:h-[680px]">
-          <OrbitalSceneCanvas orbitPath={orbitPath} currentPoint={frame.orbit} />
+          <Suspense
+            fallback={
+              <div className="flex h-full w-full items-center justify-center bg-black/95 text-[11px] uppercase tracking-[0.2em] text-cyan-100/80">
+                Loading orbital renderer...
+              </div>
+            }
+          >
+            <OrbitalSceneCanvas orbitPath={orbitPath} currentPoint={frame.orbit} />
+          </Suspense>
           <div className="scanline-overlay" />
         </div>
       </PanelBody>

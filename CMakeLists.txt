@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 
 project(
     OrbitalNeuralControlCPP
-    VERSION 0.3.1
+    VERSION 0.4.1
     DESCRIPTION "CPU-first C++20 orbital PPO baseline with reproducible train/eval/benchmark workflows"
     LANGUAGES CXX
 )
@@ -34,17 +34,36 @@ set(NMC_PGO_MODE "OFF" CACHE STRING "Profile-guided optimization mode: OFF|GENER
 set_property(CACHE NMC_PGO_MODE PROPERTY STRINGS OFF GENERATE USE AUTO)
 option(NMC_USE_LEGACY_VENDOR_DEPS "Allow fallback to vendored dependencies in lib/" OFF)
 option(NMC_ENABLE_MUJOCO "Enable MuJoCo environment support" OFF)
+option(NMC_ENABLE_TENSORRT "Enable optional TensorRT runtime hooks (requires TensorRT SDK)" OFF)
 option(NMC_BUILD_ORBITAL_CORE "Build orbital core/control/sim library + tests" OFF)
 option(NMC_BUILD_ORBITAL_BACKEND "Build orbital backend WebSocket/REST service" OFF)
 
 # -----------------------------------------------------------------------------
 # Dependencies (vcpkg-first, optional legacy fallback)
 # -----------------------------------------------------------------------------
-set(NMC_EIGEN_DEFAULT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/lib/eigen-source")
-set(NMC_TORCH_DEFAULT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/lib/libtorch")
+set(NMC_EIGEN_DEFAULT_ROOT "")
+set(NMC_TORCH_DEFAULT_ROOT "")
 set(NMC_EIGEN_ROOT "${NMC_EIGEN_DEFAULT_ROOT}" CACHE PATH "Legacy Eigen root when fallback is enabled")
 set(NMC_TORCH_ROOT "${NMC_TORCH_DEFAULT_ROOT}" CACHE PATH "Legacy LibTorch root when fallback is enabled")
 set(NMC_MUJOCO_ROOT "" CACHE PATH "Optional MuJoCo installation root")
+set(NMC_TENSORRT_ROOT "" CACHE PATH "Optional TensorRT SDK root")
+
+if(NOT NMC_USE_LEGACY_VENDOR_DEPS)
+    if(DEFINED CMAKE_TOOLCHAIN_FILE AND CMAKE_TOOLCHAIN_FILE MATCHES "^/scripts/buildsystems/vcpkg\\.cmake$")
+        message(
+            FATAL_ERROR
+            "VCPKG_ROOT is not set. Run ./tools/setup_vcpkg.sh and export VCPKG_ROOT before configuring."
+        )
+    endif()
+
+    if(DEFINED CMAKE_TOOLCHAIN_FILE AND CMAKE_TOOLCHAIN_FILE AND NOT EXISTS "${CMAKE_TOOLCHAIN_FILE}")
+        message(
+            FATAL_ERROR
+            "Configured CMAKE_TOOLCHAIN_FILE does not exist: ${CMAKE_TOOLCHAIN_FILE}. "
+            "Ensure VCPKG_ROOT points to a valid vcpkg checkout."
+        )
+    endif()
+endif()
 
 find_package(Eigen3 CONFIG QUIET)
 if(NOT Eigen3_FOUND)
@@ -84,6 +103,47 @@ else()
         message(FATAL_ERROR "SQLite3 runtime library not found")
     endif()
     set(NMC_SQLITE_LINK_TARGET "${NMC_SQLITE3_LIBRARY}")
+endif()
+
+set(NMC_WITH_TENSORRT OFF)
+if(NMC_ENABLE_TENSORRT)
+    set(_nmc_tensorrt_hints)
+    if(NMC_TENSORRT_ROOT)
+        list(APPEND _nmc_tensorrt_hints "${NMC_TENSORRT_ROOT}")
+    endif()
+    if(DEFINED ENV{TENSORRT_ROOT})
+        list(APPEND _nmc_tensorrt_hints "$ENV{TENSORRT_ROOT}")
+    endif()
+    list(APPEND _nmc_tensorrt_hints /usr /usr/local)
+
+    find_path(
+        NMC_TENSORRT_INCLUDE_DIR
+        NAMES NvInfer.h
+        HINTS ${_nmc_tensorrt_hints}
+        PATH_SUFFIXES include include/x86_64-linux-gnu
+    )
+    find_library(
+        NMC_TENSORRT_NVINFER_LIBRARY
+        NAMES nvinfer
+        HINTS ${_nmc_tensorrt_hints}
+        PATH_SUFFIXES lib lib64 lib/x86_64-linux-gnu
+    )
+    find_library(
+        NMC_TENSORRT_PARSER_LIBRARY
+        NAMES nvonnxparser
+        HINTS ${_nmc_tensorrt_hints}
+        PATH_SUFFIXES lib lib64 lib/x86_64-linux-gnu
+    )
+
+    if(NOT NMC_TENSORRT_INCLUDE_DIR OR NOT NMC_TENSORRT_NVINFER_LIBRARY OR NOT NMC_TENSORRT_PARSER_LIBRARY)
+        message(
+            FATAL_ERROR
+            "NMC_ENABLE_TENSORRT=ON, but TensorRT SDK components were not found (NvInfer + nvonnxparser). "
+            "Set NMC_TENSORRT_ROOT/TENSORRT_ROOT to your SDK path."
+        )
+    endif()
+
+    set(NMC_WITH_TENSORRT ON)
 endif()
 
 # -----------------------------------------------------------------------------
@@ -204,6 +264,12 @@ else()
     message(STATUS "  NMC_EIGEN_ROOT: ${NMC_EIGEN_ROOT}")
 endif()
 message(STATUS "  NMC_ENABLE_MUJOCO: ${NMC_ENABLE_MUJOCO}")
+message(STATUS "  NMC_ENABLE_TENSORRT: ${NMC_ENABLE_TENSORRT}")
+if(NMC_WITH_TENSORRT)
+    message(STATUS "  TensorRT include: ${NMC_TENSORRT_INCLUDE_DIR}")
+    message(STATUS "  TensorRT nvinfer: ${NMC_TENSORRT_NVINFER_LIBRARY}")
+    message(STATUS "  TensorRT parser: ${NMC_TENSORRT_PARSER_LIBRARY}")
+endif()
 message(STATUS "  NMC_BUILD_ORBITAL_CORE: ${NMC_BUILD_ORBITAL_CORE}")
 message(STATUS "  NMC_BUILD_ORBITAL_BACKEND: ${NMC_BUILD_ORBITAL_BACKEND}")
 message(STATUS "  NMC_ENABLE_LTO: ${NMC_ENABLE_LTO}")
@@ -234,6 +300,7 @@ set(NMC_RUNTIME_SOURCES
     src/domain/ppo/value_network.cpp
     src/domain/inference/inference_backend_factory.cpp
     src/domain/inference/libtorch_policy_backend.cpp
+    src/domain/inference/tensorrt_policy_backend.cpp
     src/domain/inference/tensorrt_policy_backend_stub.cpp
     src/infrastructure/artifacts/artifact_layout.cpp
     src/infrastructure/artifacts/checkpoint_manager.cpp
@@ -301,6 +368,15 @@ else()
 endif()
 if(Eigen3_FOUND)
     target_link_libraries(nmc_runtime PUBLIC Eigen3::Eigen)
+endif()
+if(NMC_WITH_TENSORRT)
+    target_include_directories(nmc_runtime SYSTEM PRIVATE "${NMC_TENSORRT_INCLUDE_DIR}")
+    target_link_libraries(
+        nmc_runtime PUBLIC
+        "${NMC_TENSORRT_NVINFER_LIBRARY}"
+        "${NMC_TENSORRT_PARSER_LIBRARY}"
+    )
+    target_compile_definitions(nmc_runtime PRIVATE NMC_WITH_TENSORRT=1)
 endif()
 
 if(TORCH_CXX_FLAGS)
@@ -398,10 +474,10 @@ if(NMC_BUILD_ORBITAL_CORE)
 endif()
 
 if(NMC_BUILD_ORBITAL_BACKEND)
-    find_package(Boost QUIET COMPONENTS system)
+    find_package(Boost QUIET COMPONENTS system json)
     if(Boost_FOUND)
         add_subdirectory(backend)
     else()
-        message(WARNING "Boost::system not found. Skipping orbital backend target. Install libboost-all-dev and reconfigure to enable it.")
+        message(WARNING "Boost::system/json not found. Skipping orbital backend target. Install libboost-all-dev and reconfigure to enable it.")
     endif()
 endif()

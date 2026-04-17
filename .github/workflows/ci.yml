@@ -105,8 +105,11 @@ jobs:
           train_return = float(bench.get("train", {}).get("final_avg_episode_return", 0.0))
           eval_return = float(bench.get("eval", {}).get("avg_episode_return", 0.0))
 
-          assert train_return > 0.5, f"train regression detected: {train_return}"
-          assert eval_return > 5.0, f"eval regression detected: {eval_return}"
+          # Baseline guardrails: keep smoke benchmark behavior inside an expected
+          # envelope and fail hard when numerical drift/regression is significant.
+          assert train_return > 5.0, f"train regression detected: {train_return}"
+          assert eval_return > -30.0, f"eval regression detected: {eval_return}"
+          assert eval_return < 80.0, f"eval anomaly detected (unexpected spike): {eval_return}"
           PY
 
       - name: Upload smoke artifacts

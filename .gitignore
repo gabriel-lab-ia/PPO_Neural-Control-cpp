@@ -2,8 +2,16 @@
 /build/
 /build-ci/
 /build-orbital*/
+/build-local/
+/build-backend-local/
 /cmake-build-*/
+/build-release/
+/build-release-pgo-gen/
+/build-release-pgo-use/
+/build-tensorrt/
 /compile_commands.json
+.vcpkg/
+/vcpkg_installed/
 *.o
 *.obj
 *.so

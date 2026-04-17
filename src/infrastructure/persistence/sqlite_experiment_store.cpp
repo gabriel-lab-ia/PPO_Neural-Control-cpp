@@ -69,11 +69,39 @@ void SQLiteExperimentStore::execute(const std::string& sql) const {
     }
 }
 
-void SQLiteExperimentStore::initialize() {
+void SQLiteExperimentStore::initialize_pragmas() {
     execute("PRAGMA journal_mode=WAL;");
     execute("PRAGMA foreign_keys=ON;");
     execute("PRAGMA busy_timeout=5000;");
+}
 
+void SQLiteExperimentStore::ensure_migration_table() {
+    execute(
+        "CREATE TABLE IF NOT EXISTS schema_migrations ("
+        "  version INTEGER PRIMARY KEY,"
+        "  applied_at TEXT NOT NULL"
+        ");"
+    );
+}
+
+int64_t SQLiteExperimentStore::current_schema_version() const {
+    Statement statement(db_, "SELECT COALESCE(MAX(version), 0) FROM schema_migrations;");
+    const int rc = sqlite3_step(statement.get());
+    check_sqlite_result(rc, db_, "select_schema_version");
+    return sqlite3_column_int64(statement.get(), 0);
+}
+
+void SQLiteExperimentStore::record_migration(const int64_t version) {
+    Statement statement(
+        db_,
+        "INSERT INTO schema_migrations(version, applied_at) VALUES(?, datetime('now'));"
+    );
+    check_bind_result(sqlite3_bind_int64(statement.get(), 1, version), db_, "bind migration version");
+    const int rc = sqlite3_step(statement.get());
+    check_sqlite_result(rc, db_, "record_schema_migration");
+}
+
+void SQLiteExperimentStore::apply_schema_v1() {
     execute(
         "CREATE TABLE IF NOT EXISTS runs ("
         "  run_id TEXT PRIMARY KEY,"
@@ -103,7 +131,6 @@ void SQLiteExperimentStore::initialize() {
         "  FOREIGN KEY(run_id) REFERENCES runs(run_id)"
         ");"
     );
-
     execute("CREATE INDEX IF NOT EXISTS idx_episodes_run ON episodes(run_id);");
     execute("CREATE INDEX IF NOT EXISTS idx_episodes_run_phase_episode ON episodes(run_id, phase, episode_index);");
 
@@ -119,7 +146,6 @@ void SQLiteExperimentStore::initialize() {
         "  FOREIGN KEY(run_id) REFERENCES runs(run_id)"
         ");"
     );
-
     execute("CREATE INDEX IF NOT EXISTS idx_events_run ON events(run_id);");
     execute("CREATE INDEX IF NOT EXISTS idx_events_run_created ON events(run_id, created_at);");
 
@@ -134,7 +160,9 @@ void SQLiteExperimentStore::initialize() {
     );
     execute("CREATE INDEX IF NOT EXISTS idx_benchmarks_name_created ON benchmarks(benchmark_name, created_at);");
     execute("CREATE INDEX IF NOT EXISTS idx_runs_started_at ON runs(started_at);");
+}
 
+void SQLiteExperimentStore::apply_schema_v2() {
     execute(
         "CREATE TABLE IF NOT EXISTS telemetry_samples ("
         "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -188,6 +216,43 @@ void SQLiteExperimentStore::initialize() {
         ");"
     );
     execute("CREATE INDEX IF NOT EXISTS idx_model_registry_refs_run_backend ON model_registry_refs(run_id, backend);");
+}
+
+void SQLiteExperimentStore::apply_migrations() {
+    constexpr int64_t kTargetSchemaVersion = 2;
+    const int64_t version = current_schema_version();
+
+    execute("BEGIN IMMEDIATE TRANSACTION;");
+    try {
+        if (version < 1) {
+            apply_schema_v1();
+            record_migration(1);
+        }
+
+        if (version < 2) {
+            apply_schema_v2();
+            record_migration(2);
+        }
+
+        execute("COMMIT;");
+    } catch (...) {
+        execute("ROLLBACK;");
+        throw;
+    }
+
+    const int64_t applied_version = current_schema_version();
+    if (applied_version < kTargetSchemaVersion) {
+        throw std::runtime_error(
+            "sqlite schema migration failed: expected version " + std::to_string(kTargetSchemaVersion) +
+            ", got " + std::to_string(applied_version)
+        );
+    }
+}
+
+void SQLiteExperimentStore::initialize() {
+    initialize_pragmas();
+    ensure_migration_table();
+    apply_migrations();
 }
 
 void SQLiteExperimentStore::insert_run_start(const RunStart& run) {

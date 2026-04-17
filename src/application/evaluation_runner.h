@@ -12,9 +12,12 @@ struct EvaluationRunOutput {
     std::filesystem::path run_dir;
     std::filesystem::path manifest_path;
     std::filesystem::path evaluation_summary_path;
+    std::string backend_runtime;
     float avg_episode_return = 0.0f;
     float avg_episode_length = 0.0f;
     float success_rate = 0.0f;
+    float avg_inference_latency_ms = 0.0f;
+    float p95_inference_latency_ms = 0.0f;
 };
 
 class EvaluationRunner {

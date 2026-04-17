@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 
 project(OrbitalBackend LANGUAGES CXX)
 
-find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS system json)
 find_package(SQLite3 QUIET)
 if(NOT SQLite3_FOUND)
     find_library(SQLITE3_FALLBACK_LIBRARY sqlite3)
@@ -36,9 +36,9 @@ target_include_directories(
 )
 
 if(SQLite3_FOUND)
-    target_link_libraries(orbital_backend PRIVATE Boost::system SQLite::SQLite3 pthread)
+    target_link_libraries(orbital_backend PRIVATE Boost::system Boost::json SQLite::SQLite3 pthread)
 else()
-    target_link_libraries(orbital_backend PRIVATE Boost::system ${SQLITE3_FALLBACK_LIBRARY} pthread)
+    target_link_libraries(orbital_backend PRIVATE Boost::system Boost::json ${SQLITE3_FALLBACK_LIBRARY} pthread)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
