@@ -110,9 +110,12 @@ TensorRT is opt-in and requires SDK headers/libs available locally:
 ```bash
 cmake --preset dev-tensorrt -DNMC_TENSORRT_ROOT=/opt/tensorrt
 cmake --build --preset build-tensorrt
+
+# first eval from ONNX builds/serializes an engine
+./build-tensorrt/nmc eval --checkpoint artifacts/latest/checkpoint.onnx --backend tensorrt_fp16 --episodes 10 --seed 7
 ```
 
-Without TensorRT SDK, keep using baseline `dev` preset; `tensorrt_*` backends remain available in compatibility mode for parity testing.
+Without TensorRT SDK, keep using baseline `dev` preset; `tensorrt_*` backends fall back to LibTorch when native runtime is unavailable.
 
 Quick backend parity + latency comparison table:
 

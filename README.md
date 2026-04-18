@@ -44,7 +44,7 @@ C++20 orbital autonomy/control engineering platform with reproducible PPO workfl
 
 ### Roadmap (not marketed as shipped)
 
-- Full TensorRT engine build/deploy pipeline (calibration cache + engine serialization)
+- Full TensorRT production deployment pipeline (advanced calibration datasets + multi-profile packaging)
 - CUDA-first training path
 - richer control-safety formalism and hardware-in-the-loop integration
 
@@ -98,39 +98,43 @@ cmake --build --preset build
 ./build/nmc eval --checkpoint artifacts/latest/checkpoint.pt --episodes 10 --backend libtorch --run-id eval_local_001 --seed 7
 ```
 
-### 5) Optional TensorRT-compatible backend validation
+### 5) Optional TensorRT backend validation
 
-The baseline remains CPU-first (`libtorch`). TensorRT backend names are already accepted by CLI and validated in parity mode:
+The baseline remains CPU-first (`libtorch`). TensorRT backend names are accepted at runtime and can run in:
+
+- native TensorRT mode (`.onnx` / `.engine` / `.plan`)
+- LibTorch fallback mode (automatic fallback when TensorRT runtime/init fails)
 
 ```bash
-# fp16-compatible path (parity/emulation mode)
-./build/nmc eval --checkpoint artifacts/latest/checkpoint.pt --backend tensorrt_fp16 --episodes 10 --seed 7 --run-id eval_trt_fp16
+# native build from ONNX -> engine (first run builds, next runs reuse engine cache)
+./build/nmc eval --checkpoint artifacts/latest/checkpoint.onnx --backend tensorrt_fp16 --episodes 10 --seed 7 --run-id eval_trt_fp16_native
 
-# int8-compatible path (parity/emulation mode)
-./build/nmc eval --checkpoint artifacts/latest/checkpoint.pt --backend tensorrt_int8 --episodes 10 --seed 7 --run-id eval_trt_int8
+# explicit engine path
+./build/nmc eval --checkpoint artifacts/latest/checkpoint.fp16.engine --backend tensorrt_fp16 --episodes 10 --seed 7 --run-id eval_trt_fp16_engine
+
+# fallback mode (if TensorRT unavailable, falls back to .pt)
+./build/nmc eval --checkpoint artifacts/latest/checkpoint.pt --backend tensorrt_fp16 --episodes 10 --seed 7 --run-id eval_trt_fp16_fallback
 ```
-
-If you pass `.engine`, `.plan`, or `.onnx`, runtime returns an explicit error when native TensorRT support is not compiled.
 
 ## TensorRT Integration Status + Measured Data
 
 Current implementation separates two states:
 
-- **Shipped now**: TensorRT-compatible backend API with parity/evaluation path and runtime capability reporting in `evaluation_summary.json`.
-- **Not shipped yet**: full native engine lifecycle (ONNX export + engine build + calibration cache + deployment runtime).
+- **Shipped now**: native TensorRT runtime path for `.onnx`/`.engine` with builder + serialization + dynamic profile + precision fallback and runtime metadata in `evaluation_summary.json`.
+- **Not shipped yet**: full production deployment flow (representative INT8 calibration corpus management and fleet-level engine packaging).
 
 Measured comparison on **April 17, 2026** (`point_mass`, same quick-trained checkpoint, `episodes=20`, `seed=7`):
 
 | Backend CLI | Runtime reported | Emulated | Avg episode return | Avg inference latency (ms) | P95 latency (ms) | Summary file |
 | --- | --- | --- | ---: | ---: | ---: | --- |
-| `libtorch` | `libtorch_cpu` | `false` | `48.0350` | `0.0305768` | `0.0358060` | `artifacts/runs/<eval_run_id>/evaluation_summary.json` |
-| `tensorrt_fp16` | `tensorrt_stub_emulation` | `true` | `48.0350` | `0.0397559` | `0.0440470` | `artifacts/runs/<eval_run_id>/evaluation_summary.json` |
-| `tensorrt_int8` | `tensorrt_stub_emulation` | `true` | `48.2105` | `0.0474782` | `0.0544430` | `artifacts/runs/<eval_run_id>/evaluation_summary.json` |
+| `libtorch` | `libtorch_cpu` | `false` | `48.0350` | `0.0290420` | `0.0327260` | `artifacts/runs/<eval_run_id>/evaluation_summary.json` |
+| `tensorrt_fp16` | `tensorrt_fallback_libtorch` | `true` | `48.0350` | `0.0290775` | `0.0391200` | `artifacts/runs/<eval_run_id>/evaluation_summary.json` |
+| `tensorrt_int8` | `tensorrt_fallback_libtorch` | `true` | `48.0350` | `0.0281963` | `0.0317110` | `artifacts/runs/<eval_run_id>/evaluation_summary.json` |
 
 Interpretation:
 
 - policy quality remains statistically aligned across backends for this smoke-scale workload.
-- latency is currently higher in TensorRT compatibility mode because this path is emulated, not native TensorRT kernels.
+- fallback mode preserves policy behavior and availability; latency delta reflects fallback overhead, not TensorRT kernel speed.
 - these numbers are useful for parity confidence, not as claims of TensorRT acceleration.
 
 Reproduce the table with one command:
@@ -256,6 +260,7 @@ Replay docs:
 - `docs/architecture.md`
 - `docs/architecture/backend-api.md`
 - `docs/architecture/system-dataflow.md`
+- `docs/architecture/tensorrt-backend.md`
 - `docs/performance/backend-performance.md`
 - `docs/performance/inference-backend-comparison.md`
 - `docs/database/sqlite-telemetry.md`
@@ -265,6 +270,7 @@ Replay docs:
 ## Honest Constraints
 
 - baseline runtime is CPU-first
-- TensorRT path in baseline is API-compatible emulation for parity testing; it is not a production TensorRT engine deployment yet
+- TensorRT native path requires build with `NMC_ENABLE_TENSORRT=ON` and local TensorRT + CUDA runtime libraries
+- if TensorRT initialization fails, runtime automatically falls back to LibTorch to preserve pipeline availability
 - backend/frontend remain optional stack modules
 - frontend 3D globe is mission-UI oriented and not a full geospatial GIS engine

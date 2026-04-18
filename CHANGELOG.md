@@ -4,9 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## 0.4.1 - TensorRT Readiness + Runtime Hardening
 
-- Added explicit `TensorRtPolicyBackend` controller in the inference layer, keeping CLI compatibility while exposing runtime/emulation capability metadata.
+- Added explicit `TensorRtPolicyBackend` controller in the inference layer with native TensorRT path (`.onnx`/`.engine`) and automatic LibTorch fallback.
+- Added native TensorRT backend implementation with ONNX parsing, engine build/serialization, dynamic-shape profile setup, and FP16/INT8 precision handling.
 - Expanded evaluation summaries with backend runtime metadata and inference latency statistics (`avg_inference_latency_ms`, `p95_inference_latency_ms`) for reproducible backend comparisons.
 - Added optional TensorRT build hooks (`NMC_ENABLE_TENSORRT`) with clear configuration diagnostics and dedicated CMake presets (`dev-tensorrt`, `build-tensorrt`).
+- Added reusable inference benchmark utilities for backend latency comparisons.
 - Hardened configure-time bootstrap diagnostics when `VCPKG_ROOT` is missing or `CMAKE_TOOLCHAIN_FILE` is invalid.
 - Recalibrated CI smoke benchmark quality gates to realistic deterministic envelope thresholds for current baseline dynamics.
 - Replaced backend POST body regex parsing with structured JSON parsing using Boost.JSON.

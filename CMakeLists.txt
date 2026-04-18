@@ -134,12 +134,37 @@ if(NMC_ENABLE_TENSORRT)
         HINTS ${_nmc_tensorrt_hints}
         PATH_SUFFIXES lib lib64 lib/x86_64-linux-gnu
     )
+    find_library(
+        NMC_TENSORRT_PLUGIN_LIBRARY
+        NAMES nvinfer_plugin
+        HINTS ${_nmc_tensorrt_hints}
+        PATH_SUFFIXES lib lib64 lib/x86_64-linux-gnu
+    )
+
+    find_package(CUDAToolkit QUIET)
+    if(CUDAToolkit_FOUND)
+        set(NMC_TENSORRT_CUDA_TARGET CUDA::cudart)
+    else()
+        find_library(
+            NMC_TENSORRT_CUDART_LIBRARY
+            NAMES cudart
+            HINTS ${_nmc_tensorrt_hints}
+            PATH_SUFFIXES lib lib64 lib/x86_64-linux-gnu targets/x86_64-linux/lib
+        )
+    endif()
 
     if(NOT NMC_TENSORRT_INCLUDE_DIR OR NOT NMC_TENSORRT_NVINFER_LIBRARY OR NOT NMC_TENSORRT_PARSER_LIBRARY)
         message(
             FATAL_ERROR
             "NMC_ENABLE_TENSORRT=ON, but TensorRT SDK components were not found (NvInfer + nvonnxparser). "
             "Set NMC_TENSORRT_ROOT/TENSORRT_ROOT to your SDK path."
+        )
+    endif()
+    if(NOT CUDAToolkit_FOUND AND NOT NMC_TENSORRT_CUDART_LIBRARY)
+        message(
+            FATAL_ERROR
+            "NMC_ENABLE_TENSORRT=ON, but CUDA runtime (cudart) was not found. "
+            "Install CUDA toolkit or set NMC_TENSORRT_ROOT/TENSORRT_ROOT with a valid cudart library."
         )
     endif()
 
@@ -269,6 +294,14 @@ if(NMC_WITH_TENSORRT)
     message(STATUS "  TensorRT include: ${NMC_TENSORRT_INCLUDE_DIR}")
     message(STATUS "  TensorRT nvinfer: ${NMC_TENSORRT_NVINFER_LIBRARY}")
     message(STATUS "  TensorRT parser: ${NMC_TENSORRT_PARSER_LIBRARY}")
+    if(NMC_TENSORRT_PLUGIN_LIBRARY)
+        message(STATUS "  TensorRT plugin: ${NMC_TENSORRT_PLUGIN_LIBRARY}")
+    endif()
+    if(CUDAToolkit_FOUND)
+        message(STATUS "  TensorRT CUDA runtime target: CUDA::cudart")
+    else()
+        message(STATUS "  TensorRT CUDA runtime: ${NMC_TENSORRT_CUDART_LIBRARY}")
+    endif()
 endif()
 message(STATUS "  NMC_BUILD_ORBITAL_CORE: ${NMC_BUILD_ORBITAL_CORE}")
 message(STATUS "  NMC_BUILD_ORBITAL_BACKEND: ${NMC_BUILD_ORBITAL_BACKEND}")
@@ -299,7 +332,9 @@ set(NMC_RUNTIME_SOURCES
     src/domain/ppo/trainer.cpp
     src/domain/ppo/value_network.cpp
     src/domain/inference/inference_backend_factory.cpp
+    src/domain/inference/inference_benchmark.cpp
     src/domain/inference/libtorch_policy_backend.cpp
+    src/domain/inference/tensorrt_native_backend.cpp
     src/domain/inference/tensorrt_policy_backend.cpp
     src/domain/inference/tensorrt_policy_backend_stub.cpp
     src/infrastructure/artifacts/artifact_layout.cpp
@@ -376,6 +411,14 @@ if(NMC_WITH_TENSORRT)
         "${NMC_TENSORRT_NVINFER_LIBRARY}"
         "${NMC_TENSORRT_PARSER_LIBRARY}"
     )
+    if(NMC_TENSORRT_PLUGIN_LIBRARY)
+        target_link_libraries(nmc_runtime PUBLIC "${NMC_TENSORRT_PLUGIN_LIBRARY}")
+    endif()
+    if(CUDAToolkit_FOUND)
+        target_link_libraries(nmc_runtime PUBLIC CUDA::cudart)
+    else()
+        target_link_libraries(nmc_runtime PUBLIC "${NMC_TENSORRT_CUDART_LIBRARY}")
+    endif()
     target_compile_definitions(nmc_runtime PRIVATE NMC_WITH_TENSORRT=1)
 endif()
 

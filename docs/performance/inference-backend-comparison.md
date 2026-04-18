@@ -13,9 +13,9 @@ NMC_BIN=./build-local/nmc ./scripts/compare_inference_backends.sh
 
 | Backend | Runtime | Emulated | Avg return | Success rate | Avg latency (ms) | P95 latency (ms) |
 | --- | --- | --- | ---: | ---: | ---: | ---: |
-| `libtorch` | `libtorch_cpu` | no | 48.0350 | 0.10 | 0.0305768 | 0.0358060 |
-| `tensorrt_fp16` | `tensorrt_stub_emulation` | yes | 48.0350 | 0.10 | 0.0397559 | 0.0440470 |
-| `tensorrt_int8` | `tensorrt_stub_emulation` | yes | 48.2105 | 0.05 | 0.0474782 | 0.0544430 |
+| `libtorch` | `libtorch_cpu` | no | 48.0350 | 0.10 | 0.0290420 | 0.0327260 |
+| `tensorrt_fp16` | `tensorrt_fallback_libtorch` | yes | 48.0350 | 0.10 | 0.0290775 | 0.0391200 |
+| `tensorrt_int8` | `tensorrt_fallback_libtorch` | yes | 48.0350 | 0.10 | 0.0281963 | 0.0317110 |
 
 Source summaries are generated under:
 
@@ -24,5 +24,5 @@ Source summaries are generated under:
 ## Interpretation
 
 - Policy quality remains aligned under backend swap for this smoke-scale test.
-- TensorRT-compatible modes currently report emulated runtime; no native TensorRT kernel acceleration is claimed here.
+- TensorRT-compatible modes in this sample report fallback/emulated runtime; native TensorRT runs should report runtime `tensorrt_native`.
 - This benchmark is intended for parity/contract validation, not final GPU throughput claims.
