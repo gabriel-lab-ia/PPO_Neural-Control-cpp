@@ -7,9 +7,6 @@ project(
     LANGUAGES CXX
 )
 
-# -----------------------------------------------------------------------------
-# Global language/tooling defaults
-# -----------------------------------------------------------------------------
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -20,10 +17,6 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Build type" FORCE)
 endif()
 
-# -----------------------------------------------------------------------------
-# Build options
-# NMC_* prefix intentionally follows the stable runtime target name: nmc.
-# -----------------------------------------------------------------------------
 option(NMC_ENABLE_WARNINGS "Enable stricter compiler warnings" ON)
 option(NMC_ENABLE_ASAN "Enable AddressSanitizer in Debug builds" OFF)
 option(NMC_ENABLE_UBSAN "Enable UndefinedBehaviorSanitizer in Debug builds" OFF)
@@ -171,9 +164,6 @@ if(NMC_ENABLE_TENSORRT)
     set(NMC_WITH_TENSORRT ON)
 endif()
 
-# -----------------------------------------------------------------------------
-# Compiler/linker profile helpers
-# -----------------------------------------------------------------------------
 function(nmc_apply_warning_profile target)
     if(NMC_ENABLE_WARNINGS)
         if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -314,9 +304,6 @@ else()
 endif()
 message(STATUS "  Primary CLI target: nmc")
 
-# -----------------------------------------------------------------------------
-# Baseline runtime target: nmc
-# -----------------------------------------------------------------------------
 set(NMC_RUNTIME_SOURCES
     src/common/determinism.cpp
     src/common/json_utils.cpp
@@ -468,9 +455,6 @@ nmc_apply_coverage(nmc)
 nmc_apply_pgo(nmc)
 nmc_try_enable_lto(nmc)
 
-# -----------------------------------------------------------------------------
-# Baseline smoke test contract
-# -----------------------------------------------------------------------------
 enable_testing()
 add_test(
     NAME nmc_smoke_benchmark
@@ -509,9 +493,6 @@ set_tests_properties(
     TIMEOUT 120
 )
 
-# -----------------------------------------------------------------------------
-# Optional expansion modules
-# -----------------------------------------------------------------------------
 if(NMC_BUILD_ORBITAL_CORE)
     add_subdirectory(core)
 endif()
